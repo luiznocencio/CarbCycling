@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "seed:taco": "tsx supabase/seed/taco.ts"
+    "seed:taco": "tsx --env-file=.env.local supabase/seed/taco.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
