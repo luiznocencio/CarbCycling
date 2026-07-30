@@ -49,3 +49,4 @@ Plan: docs/superpowers/plans/2026-07-30-perfil-metas-inteligentes.md
 - Task 1 (migration + types): complete (controller). Migration profile_bmr applied to prod DB
   (7 new profiles columns, verified); 0002_profile_bmr.sql versioned; types.ts extended
   (Sex/Intensity/BmrFormula, Profile). Known transient: DayTypesSettings.tsx tsc error until Task 7.
+- Task 2 (bmr engine): complete (commit 615ddca, review clean, 11 tests). bmr.ts pure.
