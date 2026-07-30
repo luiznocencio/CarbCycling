@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
+/*
+  Design tokens — mobile-first, tema claro/escuro.
+  Base para as telas; a skill /frontend-design refina nas tasks de UI.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f7f5;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #16a34a;
+
+  /* cores por tipo de dia (carb level) */
+  --carb-low: #0ea5e9; /* baixo carbo — azul */
+  --carb-medium: #f59e0b; /* médio carbo — âmbar */
+  --carb-high: #ef4444; /* alto carbo — vermelho */
+
+  /* comparação vs meta */
+  --on-target: #16a34a; /* dentro da meta — verde */
+  --off-target: #dc2626; /* fora da meta — vermelho */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0b0c;
+    --foreground: #ededed;
+    --card: #17181a;
+    --muted: #9ca3af;
+    --border: #2a2c30;
+    --accent: #22c55e;
+    --carb-low: #38bdf8;
+    --carb-medium: #fbbf24;
+    --carb-high: #f87171;
+    --on-target: #22c55e;
+    --off-target: #f87171;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-carb-low: var(--carb-low);
+  --color-carb-medium: var(--carb-medium);
+  --color-carb-high: var(--carb-high);
+  --color-on-target: var(--on-target);
+  --color-off-target: var(--off-target);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
