@@ -13,4 +13,7 @@ Tasks:
 
 Stack note: Next.js 16 — middleware.ts is now src/proxy.ts (fn `proxy`); see docs/superpowers/NEXT16-DECISIONS.md.
 
-Remaining: Task 4 (auth via proxy.ts), 7 (food bank), 8 (profile+day types), 9 (weekly pattern), 10 (day editor), 11 (dashboard), 12 (e2e), 13 (deploy).
+- Task 4 (auth): complete (commits 48daef9, ede8244, review clean). proxy.ts recognized; redirect 307→/login verified; build OK. Added SignOutButton (needed).
+
+Remaining: Task 7 (food bank), 8 (profile+day types), 9 (weekly pattern), 10 (day editor), 11 (dashboard), 12 (e2e), 13 (deploy).
+Pending external: user must disable "Confirm email" in Supabase Auth for real login + E2E (Task 12).
