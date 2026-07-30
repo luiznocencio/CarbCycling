@@ -14,6 +14,7 @@ Tasks:
 Stack note: Next.js 16 — middleware.ts is now src/proxy.ts (fn `proxy`); see docs/superpowers/NEXT16-DECISIONS.md.
 
 - Task 4 (auth): complete (commits 48daef9, ede8244, review clean). proxy.ts recognized; redirect 307→/login verified; build OK. Added SignOutButton (needed).
+- Task 7 (food bank): complete (commit 619f273). GET/POST /api/foods, PUT/DELETE /api/foods/[id] (Next16 async params). FoodBank.tsx (debounced search, TACO/Meu badge, custom food CRUD form, required data-testids). /foods page. build+lint+tests green; no real-login smoke test yet (email confirm pending, per Task 12).
 
-Remaining: Task 7 (food bank), 8 (profile+day types), 9 (weekly pattern), 10 (day editor), 11 (dashboard), 12 (e2e), 13 (deploy).
+Remaining: 8 (profile+day types), 9 (weekly pattern), 10 (day editor), 11 (dashboard), 12 (e2e), 13 (deploy).
 Pending external: user must disable "Confirm email" in Supabase Auth for real login + E2E (Task 12).
