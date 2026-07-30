@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ciclo de Carboidratos
 
-## Getting Started
+App pessoal (single-user) para montar dietas com ciclo de carboidratos, controlando
+macros (kcal, proteína, carboidrato, gordura) por tipo de dia (baixo / médio / alto carbo),
+com comparação em tempo real entre o cardápio planejado e a meta do dia.
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router) · TypeScript · Tailwind v4 · Supabase (Postgres + Auth) · Vercel.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Rodar localmente
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. `npm install`
+2. Crie `.env.local` a partir de `.env.example`:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=<url do projeto Supabase>
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
+   ```
+3. `npm run dev` → http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Banco de dados (Supabase)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Schema: aplique a migration `supabase/migrations/0001_init.sql` (6 tabelas + RLS).
+- Seed da base TACO (597 alimentos): `data/taco.json`. Recriar do zero:
+  ```
+  # exige SUPABASE_SERVICE_ROLE_KEY no .env.local (bypassa RLS)
+  npm run seed:taco
+  ```
+- Auth: em Authentication → Providers → Email, mantenha o provider **habilitado** e
+  **"Confirm email" desativado** (uso pessoal).
 
-## Learn More
+## Testes
 
-To learn more about Next.js, take a look at the following resources:
+- Unit (Vitest): `npm run test`
+- E2E (Playwright): `npm run test:e2e`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy (Vercel)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Importe o repositório na Vercel (New Project → Import Git Repository).
+2. Framework: Next.js (auto-detectado).
+3. Environment Variables: adicione `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   (NÃO adicione a service_role — só é usada no seed local).
+4. Deploy. Depois, em Supabase → Authentication → URL Configuration, adicione a URL de
+   produção da Vercel em Site URL / Redirect URLs.
