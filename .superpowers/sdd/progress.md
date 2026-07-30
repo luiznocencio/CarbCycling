@@ -52,3 +52,4 @@ Plan: docs/superpowers/plans/2026-07-30-perfil-metas-inteligentes.md
 - Task 2 (bmr engine): complete (commit 615ddca, review clean, 11 tests). bmr.ts pure.
 - Task 3 (weekly distribution engine): complete (commit e2d87d9, review clean, 6 tests). weekly.ts pure.
 - Task 4 (profile API): complete (commit 8afee04, review clean). GET/PUT /api/profile with new fields.
+- Task 5 (recalculate endpoint + drop suggestTargets): complete (commit 57712e3, review clean). POST /api/targets/recalculate; day-types autoSuggest removed; targets.ts deleted.
