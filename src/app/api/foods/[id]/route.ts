@@ -7,6 +7,10 @@ export async function PUT(
 ) {
   const { id } = await params;
   const supabase = await createServerSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await req.json();
   const { data, error } = await supabase
     .from("foods")
@@ -30,6 +34,10 @@ export async function DELETE(
 ) {
   const { id } = await params;
   const supabase = await createServerSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { error } = await supabase.from("foods").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });
