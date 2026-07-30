@@ -22,5 +22,9 @@ Stack note: Next.js 16 — middleware.ts is now src/proxy.ts (fn `proxy`); see d
 - Task 10 (day editor): complete. GET/POST /api/meals (nested meal_items+food, order by "order"), PUT/DELETE /api/meals/[id] (Next16 async params), POST/PUT/DELETE /api/meal-items (all writes check auth.getUser(), 401 if absent, matching day-types pattern). DayEditor.tsx (Client Component): add meal, add item via debounced food search + grams, inline quantity edit (onBlur commit), remove item/meal; totals derived client-side each render via mealMacros/sumMacros/compareToTarget (nothing persisted), macro bars green(on-target)/red(off-target) with 10% tolerance band vs dayType targets, required data-testids (add-meal, meal-name-input, item-food-search, item-qty-input, item-add, day-total-kcal/protein/carbs/fat). /day/[dayTypeId] page (Server Component, notFound if day_type missing). build+lint+tests green; no real-login smoke test yet (pending Task 12).
 - Task 11 (weekly dashboard): complete. `(app)/page.tsx` (Server Component) loads weekly_pattern + day_types in parallel, then per day_type sums all its meals (meal_items+food embed) via mealMacros/sumMacros, maps weekday 0-6 (Dom-Sáb) to day_type via weekly_pattern, computes compareToTarget per day. WeekGrid.tsx renders 7 cards (mobile stack -> up to 7-col grid on xl), carb-level dot+chip (carb-low/medium/high, static class map for Tailwind JIT), kcal bar planned-vs-target colored on-target/off-target, "Fora da meta" badge (data-testid="off-target") when |kcal diff|>100 or any macro diff>15g, card is Link to /day/[dayTypeId] when a type is assigned, dashed placeholder card (no Link) pointing to /settings when a weekday has no type. data-testid day-card-0..6. build+lint+tests green; no real-login smoke test yet (pending Task 12).
 
-Remaining: 12 (e2e), 13 (deploy).
-Pending external: user must disable "Confirm email" in Supabase Auth for real login + E2E (Task 12).
+- Task 12 (E2E): complete — playwright main-flow test GREEN (signup→settings→foods→day editor→dashboard).
+  Found+fixed 1 integration bug: FoodBank stale debounced-search response clobbered the optimistically
+  created custom food (added mutationRef guard to discard stale responses). unit 7/7 + e2e green.
+
+App feature-complete. Pushed to github.com/luiznocencio/CarbCycling (main).
+Remaining: Task 13 (deploy to Vercel).

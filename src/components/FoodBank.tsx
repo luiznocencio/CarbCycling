@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { Food } from "@/lib/types";
 
 type FormState = {
@@ -41,10 +41,16 @@ export default function FoodBank() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Contador de mutações locais (criar/editar/excluir). Uma resposta de busca
+  // que ficou obsoleta por uma mutação ocorrida durante o fetch é descartada,
+  // para não sobrescrever a lista otimista (ex.: alimento recém-criado).
+  const mutationRef = useRef(0);
+
   // busca com debounce
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => {
+      const startedAt = mutationRef.current;
       setLoading(true);
       setListError(null);
       fetch(`/api/foods?q=${encodeURIComponent(query.trim())}`, {
@@ -53,6 +59,7 @@ export default function FoodBank() {
         .then(async (res) => {
           const body = await res.json();
           if (!res.ok) throw new Error(body.error ?? "Falha ao buscar alimentos");
+          if (mutationRef.current !== startedAt) return; // resposta obsoleta
           setFoods(body as Food[]);
         })
         .catch((err) => {
@@ -131,6 +138,7 @@ export default function FoodBank() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Falha ao salvar alimento");
 
+      mutationRef.current += 1;
       setFoods((prev) => {
         if (editingId) {
           return prev.map((f) => (f.id === editingId ? (body as Food) : f));
@@ -149,6 +157,7 @@ export default function FoodBank() {
     if (!window.confirm(`Excluir "${food.name}"?`)) return;
     const res = await fetch(`/api/foods/${food.id}`, { method: "DELETE" });
     if (res.ok) {
+      mutationRef.current += 1;
       setFoods((prev) => prev.filter((f) => f.id !== food.id));
       if (editingId === food.id) closeForm();
     }
