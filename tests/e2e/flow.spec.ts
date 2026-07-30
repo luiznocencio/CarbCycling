@@ -22,40 +22,45 @@ test("fluxo principal: signup -> metas -> alimento -> cardápio -> dashboard", a
     page.getByRole("heading", { name: "Semana" }),
   ).toBeVisible({ timeout: 20_000 });
 
-  // 2. Settings: perfil + tipo de dia com sugestão de metas
+  // 2. Settings: perfil completo (basal real) + tipo de dia + padrão + recálculo semanal
   await page.goto("/settings");
   await page.getByTestId("profile-weight").fill("80");
-  await page.getByTestId("profile-goal").selectOption({ label: "Manutenção" });
-  await page
-    .getByTestId("profile-activity")
-    .selectOption({ label: "Moderado" });
+  await page.getByTestId("profile-sex").selectOption("male");
+  await page.getByTestId("profile-age").fill("30");
+  await page.getByTestId("profile-height").fill("178");
+  await page.getByTestId("profile-goal").selectOption("maintenance");
+  await page.getByTestId("profile-intensity").selectOption("moderate");
+  await page.getByTestId("profile-activity").selectOption("moderate");
   await page.getByTestId("profile-save").click();
   await expect(page.getByText("Perfil salvo.")).toBeVisible();
 
+  // Com o perfil completo, o preview de BMR/TDEE aparece
+  await expect(page.getByTestId("tdee-preview")).toBeVisible();
+
+  // Cria o tipo de dia "Baixo carbo" (abre o form de criação; único enquanto não há linhas)
   await page.getByRole("button", { name: "+ Novo tipo de dia" }).click();
   await page.getByTestId("daytype-name").fill(dayTypeName);
-  await page
-    .getByTestId("daytype-carblevel")
-    .selectOption({ label: "Baixo carbo" });
-  await page.getByTestId("daytype-suggest").click();
-
-  const kcalInput = page.getByLabel("Kcal");
-  await expect(kcalInput).not.toHaveValue("");
-  const kcalValue = Number(await kcalInput.inputValue());
-  expect(kcalValue).toBeGreaterThan(0);
-
+  await page.getByTestId("daytype-carblevel").selectOption("low");
   await page.getByTestId("daytype-save").click();
   await expect(
     page.getByTestId("daytype-row").filter({ hasText: dayTypeName }),
   ).toBeVisible();
 
-  // Recarrega para que o padrão semanal enxergue o tipo de dia recém-criado
+  // Define o padrão semanal (domingo = Baixo carbo)
   await page.reload();
   await page
     .getByTestId("weekday-select-0")
     .selectOption({ label: dayTypeName });
   await page.getByTestId("weekly-save").click();
   await expect(page.getByText("Padrão salvo.")).toBeVisible();
+
+  // Recalcula as metas da semana e confere o resumo
+  await page.getByTestId("recalc-targets").click();
+  await expect(page.getByTestId("weekly-summary")).toBeVisible();
+  await expect(page.getByTestId("weekly-avg")).toBeVisible();
+  expect(
+    Number((await page.getByTestId("weekly-avg").innerText()).replace(/\D/g, "")),
+  ).toBeGreaterThan(0);
 
   // 3. Alimentos: cadastro de alimento próprio
   await page.goto("/foods");
