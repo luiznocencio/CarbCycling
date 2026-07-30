@@ -55,3 +55,5 @@ Plan: docs/superpowers/plans/2026-07-30-perfil-metas-inteligentes.md
 - Task 5 (recalculate endpoint + drop suggestTargets): complete (commit 57712e3, review clean). POST /api/targets/recalculate; day-types autoSuggest removed; targets.ts deleted.
 - Task 6 (ProfileForm UI): complete (commit a956239, review clean). Live 3xBMR+TDEE preview, all 13 data-testids.
 - Task 7 (WeeklyTargetsPanel + settings recomposed): complete (commit 737b1b6, review clean). tsc CLEAN (0 errors); DayTypesSettings removed; 9 data-testids; settings composes ProfileForm+WeeklyTargetsPanel+WeeklyPatternSettings.
+- Task 8 (E2E update): complete (commit cdab528). Full new flow GREEN (profile+recalc). Fixed test: new-day-type form is behind "+ Novo tipo de dia" button. unit 21 + e2e green.
+FEATURE A COMPLETE (Tasks 1-8) on branch feature/smarter-targets.
