@@ -51,3 +51,4 @@ Plan: docs/superpowers/plans/2026-07-30-perfil-metas-inteligentes.md
   (Sex/Intensity/BmrFormula, Profile). Known transient: DayTypesSettings.tsx tsc error until Task 7.
 - Task 2 (bmr engine): complete (commit 615ddca, review clean, 11 tests). bmr.ts pure.
 - Task 3 (weekly distribution engine): complete (commit e2d87d9, review clean, 6 tests). weekly.ts pure.
+- Task 4 (profile API): complete (commit 8afee04, review clean). GET/PUT /api/profile with new fields.
