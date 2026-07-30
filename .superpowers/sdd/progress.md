@@ -43,3 +43,9 @@ Open MINOR follow-ups (non-blocking, from final review):
   E2E creates users without cleanup.
 
 PROJECT COMPLETE (Tasks 1-13). All work on main.
+
+=== Feature A (perfil + metas inteligentes) — branch feature/smarter-targets ===
+Plan: docs/superpowers/plans/2026-07-30-perfil-metas-inteligentes.md
+- Task 1 (migration + types): complete (controller). Migration profile_bmr applied to prod DB
+  (7 new profiles columns, verified); 0002_profile_bmr.sql versioned; types.ts extended
+  (Sex/Intensity/BmrFormula, Profile). Known transient: DayTypesSettings.tsx tsc error until Task 7.

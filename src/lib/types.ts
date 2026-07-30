@@ -1,6 +1,9 @@
 export type CarbLevel = "low" | "medium" | "high";
 export type Goal = "fat_loss" | "maintenance" | "muscle_gain";
 export type ActivityLevel = "sedentary" | "light" | "moderate" | "active";
+export type Sex = "male" | "female";
+export type Intensity = "light" | "moderate" | "aggressive";
+export type BmrFormula = "auto" | "mifflin" | "harris" | "katch";
 
 export interface Macros {
   kcal: number;
@@ -59,4 +62,11 @@ export interface Profile {
   weight_kg: number;
   goal: Goal;
   activity_level: ActivityLevel;
+  sex: Sex | null;
+  age: number | null;
+  height_cm: number | null;
+  body_fat_pct: number | null;
+  bmr_formula: BmrFormula;
+  intensity: Intensity;
+  safety_guardrails: boolean;
 }
