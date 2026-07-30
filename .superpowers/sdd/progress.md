@@ -26,5 +26,20 @@ Stack note: Next.js 16 — middleware.ts is now src/proxy.ts (fn `proxy`); see d
   Found+fixed 1 integration bug: FoodBank stale debounced-search response clobbered the optimistically
   created custom food (added mutationRef guard to discard stale responses). unit 7/7 + e2e green.
 
-App feature-complete. Pushed to github.com/luiznocencio/CarbCycling (main).
-Remaining: Task 13 (deploy to Vercel).
+- Task 13 (deploy): complete. Live at https://carb-cycling-seven.vercel.app (GitHub->Vercel import,
+  NEXT_PUBLIC_* env vars set). Prod smoke: / ->307 /login, /login serves UI, /foods ->307 (auth OK).
+
+Final whole-branch review (opus): verdict = ready for production, no Critical, RLS solid.
+Fixed post-review: #1 weekly-pattern replace semantics (can now clear a day); #2 auth guard on
+foods PUT/DELETE. Commit 6f4e467. unit 7/7 + e2e green + tsc clean.
+
+Open MINOR follow-ups (non-blocking, from final review):
+- #3 server-side validation of numeric macros (foods POST/PUT, day-types); optional DB CHECK >= 0.
+- #4 meal-items POST accepts any food_id; meals/weekly-pattern accept non-owned day_type_id
+  (integrity only, not exploitable — reads are RLS-scoped).
+- #5 editing a day_type name re-suggests targets when it was auto_suggested (client sends inherited
+  autoSuggest); only send autoSuggest on explicit "Sugerir metas" click.
+- #6 meal-items PUT/DELETE with null id -> no-op returns ok; dead /api/auth public path in proxy;
+  E2E creates users without cleanup.
+
+PROJECT COMPLETE (Tasks 1-13). All work on main.
