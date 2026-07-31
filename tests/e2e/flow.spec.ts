@@ -78,10 +78,21 @@ test("fluxo principal: signup -> metas -> alimento -> cardápio -> dashboard", a
   await expect(foodRow).toBeVisible();
   await expect(foodRow.getByText("Meu")).toBeVisible();
 
+  // Favoritar o alimento (⭐) e confirmar via API
+  const foodsRes = await page.request.get(`/api/foods?q=${encodeURIComponent(foodName)}`);
+  const foodId = ((await foodsRes.json()) as { id: string; name: string }[]).find(
+    (f) => f.name === foodName,
+  )!.id;
+  await foodRow.getByTestId("food-favorite").click();
+  await expect
+    .poll(async () => (await (await page.request.get("/api/favorites")).json()).ids as string[])
+    .toContain(foodId);
+
   // 4. Editor de dia: refeição + item, conferindo o total do dia
   await page.goto("/");
   await page.getByTestId("day-card-0").click();
   await expect(page).toHaveURL(/\/day\//);
+  const dayTypeId = /\/day\/([^/?]+)/.exec(page.url())![1];
   await expect(
     page.getByRole("heading", { name: dayTypeName }),
   ).toBeVisible();
@@ -121,4 +132,34 @@ test("fluxo principal: signup -> metas -> alimento -> cardápio -> dashboard", a
   await page.goto("/");
   await expect(page.getByTestId("day-card-0")).toBeVisible();
   await expect(page.getByTestId("day-card-0")).toContainText(dayTypeName);
+
+  // 6. Aplicar uma proposta fixa (sem IA) + trocar de opção muda o total do dia
+  const proposal = {
+    slots: [
+      {
+        name: "Teste",
+        slot: 0,
+        options: [
+          { label: "Opção 1", items: [{ food_id: foodId, quantity: 100, unit: "g" }] },
+          { label: "Opção 2", items: [{ food_id: foodId, quantity: 300, unit: "g" }] },
+        ],
+      },
+    ],
+  };
+  const applyRes = await page.request.post(`/api/day-types/${dayTypeId}/apply-menu`, {
+    data: { proposal },
+  });
+  expect(applyRes.ok()).toBeTruthy();
+
+  await page.goto(`/day/${dayTypeId}`);
+  await expect(page.getByTestId("option-tab")).toHaveCount(2);
+  // Opção 1 (100 g de frango, 165 kcal/100g) selecionada por default
+  await expect(page.getByTestId("day-total-kcal")).toHaveText("165");
+  // Troca para a Opção 2 (300 g = 495 kcal) → total muda
+  await page.getByTestId("option-tab").nth(1).click();
+  await expect
+    .poll(async () =>
+      Number((await page.getByTestId("day-total-kcal").innerText()).replace(/\D/g, "")),
+    )
+    .toBe(495);
 });
