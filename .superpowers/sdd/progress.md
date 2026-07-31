@@ -93,3 +93,4 @@ NOTE: migrations aditivas/retrocompatíveis (favorites table; meals slot/option_
 - Task 8 (E2E): complete (commit pending). Favorite via API + apply fixed proposal + option switch (165->495) GREEN. unit + e2e green.
 FEATURE C1 CODE COMPLETE (Tasks 1-8) on branch feature/menu-generator.
 Final review (opus): no Critical; fixed #1 (N/M clamp), #2 (atomic-safe PUT selected order), #3 (apply-menu ownership 404). tsc+unit+e2e green. Open MINOR: #4 .env.production is un-ignored/committed (only public vars; OPENAI_API_KEY NOT there) — pre-existing footgun.
+MERGED to main (ff, 41494cc..826465b) + pushed; Vercel redeploying. Key not leaked in diffs. Branch deleted. PENDING: user must add OPENAI_API_KEY to Vercel env (server-side) + redeploy for generator to work. FEATURE C1 code LIVE (AI gen needs key).
