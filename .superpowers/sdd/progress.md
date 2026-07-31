@@ -84,3 +84,4 @@ MERGED to main (ff, 24e9535..74344ea) + pushed; Vercel redeployed. Prod smoke: /
 Plan: docs/superpowers/plans/2026-07-30-gerador-cardapio.md
 NOTE: migrations aditivas/retrocompatíveis (favorites table; meals slot/option_label/selected default true, slot=order backfill). OPENAI_API_KEY in .env.local; MUST add to Vercel at deploy.
 - Task 1 (migrations + Meal type): complete (controller). food_favorites (RLS) + meals slot/option_label/selected applied to prod DB; advisor clean (only pre-existing WARNs). Meal type extended. tsc clean.
+- Task 2 (solver): complete (commit b920c0e, review clean, 4 tests). mealSubTargets + scaleOptionToKcal pure.
