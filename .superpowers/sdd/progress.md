@@ -90,3 +90,5 @@ NOTE: migrations aditivas/retrocompatíveis (favorites table; meals slot/option_
 - Task 5 (generate + apply-menu routes): complete (commit 1e22ff1, review clean). generate builds proposal (pool fav∪basics, subTargets, generateMenu, solver, macros; 502/400 guards; not saved); apply-menu replaces meals with slot/options. tsc clean, 39 tests.
 - Task 6 (selected aggregation + option tabs): complete (commit 6872f8b, review clean). Dashboard/day totals filter selected; DayEditor groups by slot + option-tab; PUT enforces exclusive selected. Fixed delete-promote gap (commit follows).
 - Task 7 (MenuGenerator UI): complete (commit c47b39c, review clean). Dialog N/M -> proposal (option tabs, total vs target) -> apply/regenerate; 7 data-testids; integrated above DayEditor. tsc+vitest green.
+- Task 8 (E2E): complete (commit pending). Favorite via API + apply fixed proposal + option switch (165->495) GREEN. unit + e2e green.
+FEATURE C1 CODE COMPLETE (Tasks 1-8) on branch feature/menu-generator.
