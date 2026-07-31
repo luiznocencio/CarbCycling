@@ -71,3 +71,4 @@ DECISION: meal_items rename handled via EXPAND-CONTRACT (shared prod DB) — Tas
 - Task 2 (enrichment): complete (commit 4cf78e3, review clean). 108 foods enriched (units.json + reproducible seed + applied to prod DB; count=108). units-data test 4/4.
 - Task 3 (food unit API): complete (commit 603abb9, review clean). PUT /api/foods/[id]/unit (set_food_unit RPC, both-or-neither + grams>0 validation); POST/PUT foods accept unit fields.
 - Task 5 (meal units data+engine+api): complete (commits 0004-migration + 7691325, review clean). Expand migration applied (quantity+unit added, quantity_g kept nullable). itemGrams engine; MealItem quantity+unit; meal-items API validates unit needs unit_grams. 29 tests. tsc red only in DayEditor+dashboard (transient → Task 6).
+- Task 6 (day editor + dashboard units): complete (commit 50fed64, review clean). tsc CLEAN; item-unit-toggle + item-display; dashboard quantity+unit. Transient resolved.
