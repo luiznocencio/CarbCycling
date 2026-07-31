@@ -87,3 +87,4 @@ NOTE: migrations aditivas/retrocompatíveis (favorites table; meals slot/option_
 - Task 2 (solver): complete (commit b920c0e, review clean, 4 tests). mealSubTargets + scaleOptionToKcal pure.
 - Task 3 (favorites + basics): complete (commit c72c2de, review clean). favorite API + GET /api/favorites + star toggle; data/basics.json 23 items (all in TACO). basics integrity test. vitest 37.
 - Task 4 (AI module): complete (commit 31ef069, review clean). openai v7 dep; openai.ts client; menu.ts generateMenu (gpt-4o-mini json_schema) + validateMenu (pure, tested). 39 tests. key not leaked.
+- Task 5 (generate + apply-menu routes): complete (commit 1e22ff1, review clean). generate builds proposal (pool fav∪basics, subTargets, generateMenu, solver, macros; 502/400 guards; not saved); apply-menu replaces meals with slot/options. tsc clean, 39 tests.
