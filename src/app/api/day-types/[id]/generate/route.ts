@@ -12,8 +12,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await req.json();
-  const n: number = body.meals ?? 5;
-  const m: number = body.options ?? 3;
+  // Clamp server-side: evita RangeError/OOM (ex.: meals negativo/enorme) e custo de IA descontrolado.
+  const n = Math.min(12, Math.max(1, Math.trunc(Number(body.meals) || 5)));
+  const m = Math.min(12, Math.max(1, Math.trunc(Number(body.options) || 3)));
 
   const { data: dayType } = await supabase.from("day_types").select("*").eq("id", id).maybeSingle();
   if (!dayType) return NextResponse.json({ error: "tipo de dia não encontrado" }, { status: 404 });

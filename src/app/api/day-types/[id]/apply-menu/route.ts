@@ -12,6 +12,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { proposal } = (await req.json()) as { proposal: Proposal };
+  if (!proposal || !Array.isArray(proposal.slots)) {
+    return NextResponse.json({ error: "proposta inválida" }, { status: 400 });
+  }
+
+  // Confere a posse do tipo de dia sob RLS → 404 consistente com o generate.
+  // (A RLS de `meals` já impede dano cross-tenant; isto evita ok:true para day_type alheio.)
+  const { data: dayType } = await supabase.from("day_types").select("id").eq("id", id).maybeSingle();
+  if (!dayType) return NextResponse.json({ error: "tipo de dia não encontrado" }, { status: 404 });
 
   // Substitui: apaga as refeições atuais do tipo de dia (cascade em meal_items)
   const { error: delErr } = await supabase.from("meals").delete().eq("day_type_id", id);

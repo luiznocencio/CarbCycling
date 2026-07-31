@@ -13,21 +13,8 @@ export async function PUT(
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await req.json();
 
-  if (body.selected === true) {
-    const { data: current } = await supabase
-      .from("meals")
-      .select("day_type_id, slot")
-      .eq("id", id)
-      .maybeSingle();
-    if (current) {
-      await supabase
-        .from("meals")
-        .update({ selected: false })
-        .eq("day_type_id", current.day_type_id)
-        .eq("slot", current.slot);
-    }
-  }
-
+  // Marca o alvo PRIMEIRO; só então desmarca as irmãs do mesmo slot. Nesta ordem o slot
+  // nunca fica com 0 opções selecionadas se o segundo write falhar (evita subcontar o dia).
   const { data, error } = await supabase
     .from("meals")
     .update({
@@ -40,6 +27,15 @@ export async function PUT(
     .select()
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  if (body.selected === true) {
+    await supabase
+      .from("meals")
+      .update({ selected: false })
+      .eq("day_type_id", data.day_type_id)
+      .eq("slot", data.slot)
+      .neq("id", id);
+  }
   return NextResponse.json(data);
 }
 
