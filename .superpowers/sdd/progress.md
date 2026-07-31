@@ -79,3 +79,8 @@ DECISION: meal_items rename handled via EXPAND-CONTRACT (shared prod DB) — Tas
   #3 no server-side quantity>0 validation on meal-items (pre-existing lax pattern); #4 set_food_unit
   RPC could set unit_name with NULL grams directly (reads as "no unit", benign).
 MERGED to main (ff, 24e9535..74344ea) + pushed; Vercel redeployed. Prod smoke: /foods shows "Editar unidade" + egg "1 unidade = 50 g" (enrichment live). CONTRACT migration applied (quantity_g dropped, quantity NOT NULL; verified). FEATURE B LIVE.
+
+=== Feature C1 (gerador de cardápio por IA) — branch feature/menu-generator ===
+Plan: docs/superpowers/plans/2026-07-30-gerador-cardapio.md
+NOTE: migrations aditivas/retrocompatíveis (favorites table; meals slot/option_label/selected default true, slot=order backfill). OPENAI_API_KEY in .env.local; MUST add to Vercel at deploy.
+- Task 1 (migrations + Meal type): complete (controller). food_favorites (RLS) + meals slot/option_label/selected applied to prod DB; advisor clean (only pre-existing WARNs). Meal type extended. tsc clean.

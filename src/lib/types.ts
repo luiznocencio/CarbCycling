@@ -50,6 +50,9 @@ export interface Meal {
   day_type_id: string;
   name: string;
   order: number;
+  slot: number;
+  option_label: string;
+  selected: boolean;
 }
 
 export interface MealItem {
