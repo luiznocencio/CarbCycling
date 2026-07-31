@@ -13,7 +13,7 @@ const WEEKDAYS = [
   "Sábado",
 ];
 
-type MealItemRow = { quantity_g: number; food: Food };
+type MealItemRow = { quantity: number; unit: "g" | "unit"; food: Food };
 type MealRow = { meal_items: MealItemRow[] };
 
 export default async function DashboardPage() {
@@ -32,10 +32,16 @@ export default async function DashboardPage() {
     allDayTypes.map(async (dt) => {
       const { data: meals } = await supabase
         .from("meals")
-        .select("meal_items(quantity_g, food:foods(*))")
+        .select("meal_items(quantity, unit, food:foods(*))")
         .eq("day_type_id", dt.id);
       const mealTotals = ((meals ?? []) as unknown as MealRow[]).map((m) =>
-        mealMacros(m.meal_items),
+        mealMacros(
+          m.meal_items.map((it) => ({
+            quantity: it.quantity,
+            unit: it.unit,
+            food: it.food,
+          })),
+        ),
       );
       return [dt.id, sumMacros(mealTotals)] as const;
     }),

@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { DayType, Food, Meal, MealItem } from "@/lib/types";
 import {
+  itemGrams,
   itemMacros,
   mealMacros,
   sumMacros,
@@ -79,15 +80,17 @@ function MacroBar({
 function AddItemForm({
   onAdd,
 }: {
-  onAdd: (food: Food, quantityG: number) => Promise<void>;
+  onAdd: (food: Food, quantity: number, unit: "g" | "unit") => Promise<void>;
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Food[]>([]);
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<Food | null>(null);
   const [qty, setQty] = useState("100");
+  const [unit, setUnit] = useState<"g" | "unit">("g");
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasUnitOption = Boolean(selected?.unit_grams);
 
   useEffect(() => {
     if (selected) return;
@@ -117,12 +120,21 @@ function AddItemForm({
     setSelected(food);
     setQuery(food.name);
     setResults([]);
+    const defaultUnit: "g" | "unit" = food.unit_grams ? "unit" : "g";
+    setUnit(defaultUnit);
+    setQty(defaultUnit === "unit" ? "1" : "100");
+  }
+
+  function changeUnit(next: "g" | "unit") {
+    setUnit(next);
+    setQty(next === "unit" ? "1" : "100");
   }
 
   function reset() {
     setSelected(null);
     setQuery("");
     setQty("100");
+    setUnit("g");
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -132,14 +144,19 @@ function AddItemForm({
       setError("Escolha um alimento na busca.");
       return;
     }
-    const quantityG = Number(qty);
-    if (Number.isNaN(quantityG) || quantityG <= 0) {
-      setError("Informe uma quantidade em gramas válida.");
+    const quantity = Number(qty);
+    if (Number.isNaN(quantity) || quantity <= 0) {
+      setError(
+        unit === "unit"
+          ? "Informe uma quantidade válida."
+          : "Informe uma quantidade em gramas válida.",
+      );
       return;
     }
+    const finalUnit: "g" | "unit" = selected.unit_grams ? unit : "g";
     setAdding(true);
     try {
-      await onAdd(selected, quantityG);
+      await onAdd(selected, quantity, finalUnit);
       reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao adicionar item");
@@ -193,6 +210,40 @@ function AddItemForm({
         )}
       </div>
 
+      {hasUnitOption && (
+        <div
+          data-testid="item-unit-toggle"
+          role="group"
+          aria-label="Unidade de medida"
+          className="flex rounded-lg border border-border bg-background p-0.5 text-xs font-medium"
+        >
+          <button
+            type="button"
+            onClick={() => changeUnit("unit")}
+            aria-pressed={unit === "unit"}
+            className={`flex-1 rounded-md px-2 py-1.5 transition-colors ${
+              unit === "unit"
+                ? "bg-accent text-white"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            {selected?.unit_name ?? "unidade"}
+          </button>
+          <button
+            type="button"
+            onClick={() => changeUnit("g")}
+            aria-pressed={unit === "g"}
+            className={`flex-1 rounded-md px-2 py-1.5 transition-colors ${
+              unit === "g"
+                ? "bg-accent text-white"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            gramas
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -202,10 +253,10 @@ function AddItemForm({
           value={qty}
           onChange={(e) => setQty(e.target.value)}
           data-testid="item-qty-input"
-          placeholder="g"
+          placeholder={unit === "unit" ? "qtd" : "g"}
           className="w-20 rounded-lg border border-border bg-background px-3 py-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
         />
-        <span className="text-xs text-muted">gramas</span>
+        {!hasUnitOption && <span className="text-xs text-muted">gramas</span>}
         <button
           type="submit"
           disabled={adding || !selected}
@@ -226,16 +277,16 @@ function ItemRow({
   onRemove,
 }: {
   item: MealItemWithFood;
-  onUpdateQty: (item: MealItemWithFood, quantityG: number) => Promise<void>;
+  onUpdateQty: (item: MealItemWithFood, quantity: number) => Promise<void>;
   onRemove: (item: MealItemWithFood) => void;
 }) {
-  const [qty, setQty] = useState(String(item.quantity_g));
+  const [qty, setQty] = useState(String(item.quantity));
   const [saving, setSaving] = useState(false);
 
   async function commit() {
     const n = Number(qty);
-    if (Number.isNaN(n) || n <= 0 || n === item.quantity_g) {
-      setQty(String(item.quantity_g));
+    if (Number.isNaN(n) || n <= 0 || n === item.quantity) {
+      setQty(String(item.quantity));
       return;
     }
     setSaving(true);
@@ -247,6 +298,11 @@ function ItemRow({
   }
 
   const m = itemMacros(item, item.food);
+  const unitLabel = item.unit === "unit" ? item.food.unit_name ?? "unidade" : "g";
+  const displayText =
+    item.unit === "unit"
+      ? `${item.quantity} ${item.food.unit_name ?? "unidade"} (${itemGrams(item, item.food)}g)`
+      : `${item.quantity} g`;
 
   return (
     <div
@@ -256,6 +312,8 @@ function ItemRow({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm text-foreground">{item.food.name}</p>
         <p className="text-xs text-muted">
+          <span data-testid="item-display">{displayText}</span>
+          {" · "}
           {m.kcal} kcal · P {m.protein_g}g · C {m.carbs_g}g · G {m.fat_g}g
         </p>
       </div>
@@ -274,7 +332,7 @@ function ItemRow({
         data-testid="item-qty-edit"
         className="w-16 shrink-0 rounded-lg border border-border bg-card px-2 py-1.5 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
       />
-      <span className="shrink-0 text-xs text-muted">g</span>
+      <span className="shrink-0 text-xs text-muted">{unitLabel}</span>
       <button
         type="button"
         onClick={() => onRemove(item)}
@@ -362,7 +420,8 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
   async function handleAddItem(
     meal: MealWithItems,
     food: Food,
-    quantityG: number,
+    quantity: number,
+    unit: "g" | "unit",
   ) {
     const res = await fetch("/api/meal-items", {
       method: "POST",
@@ -370,7 +429,8 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
       body: JSON.stringify({
         meal_id: meal.id,
         food_id: food.id,
-        quantity_g: quantityG,
+        quantity,
+        unit,
       }),
     });
     const body = await res.json();
@@ -383,14 +443,11 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
     );
   }
 
-  async function handleUpdateItemQty(
-    item: MealItemWithFood,
-    quantityG: number,
-  ) {
+  async function handleUpdateItemQty(item: MealItemWithFood, quantity: number) {
     const res = await fetch("/api/meal-items", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: item.id, quantity_g: quantityG }),
+      body: JSON.stringify({ id: item.id, quantity }),
     });
     const body = await res.json();
     if (!res.ok) throw new Error(body.error ?? "Falha ao atualizar item");
@@ -536,7 +593,7 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
                 )}
                 {meal.meal_items.map((item) => (
                   <ItemRow
-                    key={`${item.id}:${item.quantity_g}`}
+                    key={`${item.id}:${item.quantity}:${item.unit}`}
                     item={item}
                     onUpdateQty={handleUpdateItemQty}
                     onRemove={handleRemoveItem}
@@ -544,7 +601,11 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
                 ))}
               </div>
 
-              <AddItemForm onAdd={(food, qty) => handleAddItem(meal, food, qty)} />
+              <AddItemForm
+                onAdd={(food, quantity, unit) =>
+                  handleAddItem(meal, food, quantity, unit)
+                }
+              />
             </div>
           );
         })}
