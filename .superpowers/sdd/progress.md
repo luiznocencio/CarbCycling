@@ -73,3 +73,8 @@ DECISION: meal_items rename handled via EXPAND-CONTRACT (shared prod DB) — Tas
 - Task 5 (meal units data+engine+api): complete (commits 0004-migration + 7691325, review clean). Expand migration applied (quantity+unit added, quantity_g kept nullable). itemGrams engine; MealItem quantity+unit; meal-items API validates unit needs unit_grams. 29 tests. tsc red only in DayEditor+dashboard (transient → Task 6).
 - Task 6 (day editor + dashboard units): complete (commit 50fed64, review clean). tsc CLEAN; item-unit-toggle + item-display; dashboard quantity+unit. Transient resolved.
 - Task 7 (E2E unit): complete (commit pending). Full flow + add-by-unit step GREEN (egg 2 units=100g, toggle, item-display, total up). unit 29 + e2e green.
+- Final review (opus): ready for merge, no Critical/blocker. Fixed #5 (mutationRef in handleUnitSave).
+  #1 (expand-window quantity NULL) handled by immediate deploy + contract backfill.
+  Open MINOR follow-ups: #2 meal-items PUT lacks unit_grams guard (unreachable from UI, benign 0g);
+  #3 no server-side quantity>0 validation on meal-items (pre-existing lax pattern); #4 set_food_unit
+  RPC could set unit_name with NULL grams directly (reads as "no unit", benign).
