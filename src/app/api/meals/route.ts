@@ -14,7 +14,8 @@ export async function GET(req: Request) {
     .from("meals")
     .select("*, meal_items(*, food:foods(*))")
     .eq("day_type_id", dayTypeId)
-    .order("order");
+    .order("slot")
+    .order("option_label");
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json(data);
 }
@@ -33,6 +34,9 @@ export async function POST(req: Request) {
       day_type_id: body.day_type_id,
       name: body.name,
       order: body.order ?? 0,
+      slot: body.slot ?? body.order ?? 0,
+      option_label: body.option_label ?? "Opção 1",
+      selected: body.selected ?? true,
     })
     .select()
     .single();

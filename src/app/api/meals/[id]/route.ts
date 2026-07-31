@@ -12,9 +12,30 @@ export async function PUT(
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await req.json();
+
+  if (body.selected === true) {
+    const { data: current } = await supabase
+      .from("meals")
+      .select("day_type_id, slot")
+      .eq("id", id)
+      .maybeSingle();
+    if (current) {
+      await supabase
+        .from("meals")
+        .update({ selected: false })
+        .eq("day_type_id", current.day_type_id)
+        .eq("slot", current.slot);
+    }
+  }
+
   const { data, error } = await supabase
     .from("meals")
-    .update({ name: body.name, order: body.order })
+    .update({
+      name: body.name,
+      order: body.order,
+      selected: body.selected,
+      option_label: body.option_label ?? undefined,
+    })
     .eq("id", id)
     .select()
     .single();

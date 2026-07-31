@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type { DayType, Food, Meal, MealItem } from "@/lib/types";
 import {
   itemGrams,
@@ -345,6 +345,45 @@ function ItemRow({
   );
 }
 
+function OptionTabs({
+  options,
+  onSelect,
+}: {
+  options: MealWithItems[];
+  onSelect: (meal: MealWithItems) => void;
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label="Opções da refeição"
+      className="flex gap-1.5 overflow-x-auto pb-0.5"
+    >
+      {options.map((option) => {
+        const active = option.selected;
+        return (
+          <button
+            key={option.id}
+            type="button"
+            role="tab"
+            data-testid="option-tab"
+            aria-pressed={active}
+            aria-selected={active}
+            onClick={() => onSelect(option)}
+            className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
+              active
+                ? "bg-accent text-white"
+                : "bg-background text-muted hover:text-foreground"
+            }`}
+          >
+            {active && <span aria-hidden="true">✓ </span>}
+            {option.option_label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function DayEditor({ dayType }: { dayType: DayType }) {
   const [meals, setMeals] = useState<MealWithItems[]>([]);
   const [loading, setLoading] = useState(true);
@@ -378,6 +417,10 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
     };
   }, [dayType.id]);
 
+  const nextSlot = meals.length
+    ? Math.max(...meals.map((m) => m.slot)) + 1
+    : 0;
+
   async function handleAddMeal(e: FormEvent) {
     e.preventDefault();
     setMealError(null);
@@ -394,7 +437,10 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
         body: JSON.stringify({
           day_type_id: dayType.id,
           name,
-          order: meals.length,
+          order: nextSlot,
+          slot: nextSlot,
+          option_label: "Opção 1",
+          selected: true,
         }),
       });
       const body = await res.json();
@@ -414,6 +460,29 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
     const res = await fetch(`/api/meals/${meal.id}`, { method: "DELETE" });
     if (res.ok) {
       setMeals((prev) => prev.filter((m) => m.id !== meal.id));
+    }
+  }
+
+  async function handleSelectOption(meal: MealWithItems) {
+    if (meal.selected) return;
+    const snapshot = meals;
+    setMeals((prev) =>
+      prev.map((m) =>
+        m.day_type_id === meal.day_type_id && m.slot === meal.slot
+          ? { ...m, selected: m.id === meal.id }
+          : m,
+      ),
+    );
+    try {
+      const res = await fetch(`/api/meals/${meal.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selected: true }),
+      });
+      if (!res.ok) throw new Error("Falha ao selecionar opção");
+    } catch (err) {
+      setMeals(snapshot);
+      setError(err instanceof Error ? err.message : "Falha ao selecionar opção");
     }
   }
 
@@ -476,8 +545,28 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
     }
   }
 
-  const dayTotal = sumMacros(meals.map((m) => mealMacros(m.meal_items)));
+  const dayTotal = sumMacros(
+    meals.filter((m) => m.selected).map((m) => mealMacros(m.meal_items)),
+  );
   const diffs = compareToTarget(dayTotal, dayType);
+
+  const groups = useMemo(() => {
+    const map = new Map<number, MealWithItems[]>();
+    for (const m of meals) {
+      const arr = map.get(m.slot) ?? [];
+      arr.push(m);
+      map.set(m.slot, arr);
+    }
+    return [...map.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([slot, options]) => {
+        const sorted = [...options].sort((a, b) =>
+          a.option_label.localeCompare(b.option_label),
+        );
+        const active = sorted.find((o) => o.selected) ?? sorted[0];
+        return { slot, options: sorted, active };
+      });
+  }, [meals]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -560,11 +649,13 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
       )}
 
       <div className="flex flex-col gap-4">
-        {meals.map((meal) => {
+        {groups.map((group) => {
+          const meal = group.active;
           const subtotal = mealMacros(meal.meal_items);
+          const hasOptions = group.options.length > 1;
           return (
             <div
-              key={meal.id}
+              key={group.slot}
               data-testid="meal-card"
               className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4"
             >
@@ -583,9 +674,13 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
                   onClick={() => handleRemoveMeal(meal)}
                   className="shrink-0 text-xs text-off-target hover:underline"
                 >
-                  Excluir refeição
+                  {hasOptions ? "Excluir opção" : "Excluir refeição"}
                 </button>
               </div>
+
+              {hasOptions && (
+                <OptionTabs options={group.options} onSelect={handleSelectOption} />
+              )}
 
               <div className="flex flex-col gap-1.5">
                 {meal.meal_items.length === 0 && (

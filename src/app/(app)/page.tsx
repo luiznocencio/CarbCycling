@@ -33,7 +33,8 @@ export default async function DashboardPage() {
       const { data: meals } = await supabase
         .from("meals")
         .select("meal_items(quantity, unit, food:foods(*))")
-        .eq("day_type_id", dt.id);
+        .eq("day_type_id", dt.id)
+        .eq("selected", true);
       const mealTotals = ((meals ?? []) as unknown as MealRow[]).map((m) =>
         mealMacros(
           m.meal_items.map((it) => ({
