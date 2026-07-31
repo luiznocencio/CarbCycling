@@ -28,6 +28,8 @@ export async function POST(req: Request) {
       protein_per_100g: body.protein_per_100g,
       carbs_per_100g: body.carbs_per_100g,
       fat_per_100g: body.fat_per_100g,
+      unit_name: body.unit_name ?? null,
+      unit_grams: body.unit_grams ?? null,
     })
     .select()
     .single();
