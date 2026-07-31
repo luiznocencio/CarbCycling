@@ -78,3 +78,4 @@ DECISION: meal_items rename handled via EXPAND-CONTRACT (shared prod DB) — Tas
   Open MINOR follow-ups: #2 meal-items PUT lacks unit_grams guard (unreachable from UI, benign 0g);
   #3 no server-side quantity>0 validation on meal-items (pre-existing lax pattern); #4 set_food_unit
   RPC could set unit_name with NULL grams directly (reads as "no unit", benign).
+MERGED to main (ff, 24e9535..74344ea) + pushed; Vercel redeployed. Prod smoke: /foods shows "Editar unidade" + egg "1 unidade = 50 g" (enrichment live). CONTRACT migration applied (quantity_g dropped, quantity NOT NULL; verified). FEATURE B LIVE.
