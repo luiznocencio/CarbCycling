@@ -8,13 +8,16 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await req.json();
+  const unit: "g" | "unit" = body.unit === "unit" ? "unit" : "g";
+  if (unit === "unit") {
+    const { data: food } = await supabase.from("foods").select("unit_grams").eq("id", body.food_id).maybeSingle();
+    if (!food?.unit_grams) {
+      return NextResponse.json({ error: "Este alimento não tem unidade definida." }, { status: 400 });
+    }
+  }
   const { data, error } = await supabase
     .from("meal_items")
-    .insert({
-      meal_id: body.meal_id,
-      food_id: body.food_id,
-      quantity_g: body.quantity_g,
-    })
+    .insert({ meal_id: body.meal_id, food_id: body.food_id, quantity: body.quantity, unit })
     .select("*, food:foods(*)")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -28,9 +31,11 @@ export async function PUT(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await req.json();
+  const patch: { quantity: number; unit?: "g" | "unit" } = { quantity: body.quantity };
+  if (body.unit === "g" || body.unit === "unit") patch.unit = body.unit;
   const { data, error } = await supabase
     .from("meal_items")
-    .update({ quantity_g: body.quantity_g })
+    .update(patch)
     .eq("id", body.id)
     .select("*, food:foods(*)")
     .single();

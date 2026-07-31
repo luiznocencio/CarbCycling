@@ -2,8 +2,18 @@ import type { Food, Macros } from "@/lib/types";
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-export function itemMacros(item: { quantity_g: number }, food: Food): Macros {
-  const f = item.quantity_g / 100;
+export function itemGrams(
+  item: { quantity: number; unit: "g" | "unit" },
+  food: Pick<Food, "unit_grams">,
+): number {
+  return item.unit === "unit" ? item.quantity * (food.unit_grams ?? 0) : item.quantity;
+}
+
+export function itemMacros(
+  item: { quantity: number; unit: "g" | "unit" },
+  food: Food,
+): Macros {
+  const f = itemGrams(item, food) / 100;
   return {
     kcal: round1(food.kcal_per_100g * f),
     protein_g: round1(food.protein_per_100g * f),
@@ -21,7 +31,9 @@ export function sumMacros(list: Macros[]): Macros {
   }), { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
 }
 
-export function mealMacros(items: { quantity_g: number; food: Food }[]): Macros {
+export function mealMacros(
+  items: { quantity: number; unit: "g" | "unit"; food: Food }[],
+): Macros {
   return sumMacros(items.map((it) => itemMacros(it, it.food)));
 }
 

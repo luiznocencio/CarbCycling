@@ -56,7 +56,8 @@ export interface MealItem {
   id: string;
   meal_id: string;
   food_id: string;
-  quantity_g: number;
+  quantity: number;
+  unit: "g" | "unit";
 }
 
 export interface Profile {
