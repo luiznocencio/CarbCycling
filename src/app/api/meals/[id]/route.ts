@@ -53,7 +53,26 @@ export async function DELETE(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // Captura o slot antes de excluir, para promover uma irmã se a opção excluída era a selecionada.
+  const { data: meal } = await supabase
+    .from("meals")
+    .select("day_type_id, slot, selected")
+    .eq("id", id)
+    .maybeSingle();
   const { error } = await supabase.from("meals").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (meal?.selected) {
+    const { data: sibling } = await supabase
+      .from("meals")
+      .select("id")
+      .eq("day_type_id", meal.day_type_id)
+      .eq("slot", meal.slot)
+      .order("option_label")
+      .limit(1)
+      .maybeSingle();
+    if (sibling) {
+      await supabase.from("meals").update({ selected: true }).eq("id", sibling.id);
+    }
+  }
   return NextResponse.json({ ok: true });
 }
