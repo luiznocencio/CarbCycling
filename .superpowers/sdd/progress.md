@@ -68,3 +68,4 @@ DECISION: meal_items rename handled via EXPAND-CONTRACT (shared prod DB) — Tas
   to prod DB (0003_food_units.sql versioned). Security: revoked EXECUTE from anon (advisor lint cleared);
   authenticated-execute is intentional. Food type +unit_name/unit_grams. macros.test.ts arroz fixture
   patched (unit_name/unit_grams null) to keep tsc green until Task 5. tsc clean, vitest green.
+- Task 2 (enrichment): complete (commit 4cf78e3, review clean). 108 foods enriched (units.json + reproducible seed + applied to prod DB; count=108). units-data test 4/4.
