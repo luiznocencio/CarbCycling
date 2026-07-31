@@ -69,3 +69,4 @@ DECISION: meal_items rename handled via EXPAND-CONTRACT (shared prod DB) — Tas
   authenticated-execute is intentional. Food type +unit_name/unit_grams. macros.test.ts arroz fixture
   patched (unit_name/unit_grams null) to keep tsc green until Task 5. tsc clean, vitest green.
 - Task 2 (enrichment): complete (commit 4cf78e3, review clean). 108 foods enriched (units.json + reproducible seed + applied to prod DB; count=108). units-data test 4/4.
+- Task 3 (food unit API): complete (commit 603abb9, review clean). PUT /api/foods/[id]/unit (set_food_unit RPC, both-or-neither + grams>0 validation); POST/PUT foods accept unit fields.
