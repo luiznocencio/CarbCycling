@@ -164,6 +164,7 @@ export default function FoodBank() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Falha ao salvar unidade");
 
+      mutationRef.current += 1;
       setFoods((prev) =>
         prev.map((f) =>
           f.id === foodId ? { ...f, unit_name: unitName, unit_grams: unitGrams } : f,
