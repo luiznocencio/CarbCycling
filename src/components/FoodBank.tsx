@@ -52,6 +52,8 @@ export default function FoodBank() {
   const [loading, setLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
 
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -94,6 +96,48 @@ export default function FoodBank() {
       controller.abort();
     };
   }, [query]);
+
+  // carrega os favoritos do usuário uma vez, no mount
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/favorites")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const body = await res.json();
+        if (!cancelled) setFavorites(new Set<string>(body.ids ?? []));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function toggleFavorite(food: Food) {
+    const wasFavorite = favorites.has(food.id);
+
+    // atualização otimista
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (wasFavorite) next.delete(food.id);
+      else next.add(food.id);
+      return next;
+    });
+
+    try {
+      const res = await fetch(`/api/foods/${food.id}/favorite`, {
+        method: wasFavorite ? "DELETE" : "POST",
+      });
+      if (!res.ok) throw new Error("Falha ao atualizar favorito");
+    } catch {
+      // reverte em caso de falha
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        if (wasFavorite) next.add(food.id);
+        else next.delete(food.id);
+        return next;
+      });
+    }
+  }
 
   const title = useMemo(
     () => (editingId ? "Editar alimento" : "Novo alimento"),
@@ -459,24 +503,53 @@ export default function FoodBank() {
                   {food.is_custom ? "Meu" : "TACO"}
                 </span>
               </div>
-              {food.is_custom && (
-                <div className="flex shrink-0 gap-3 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => openEditForm(food)}
-                    className="text-accent hover:underline"
+              <div className="flex shrink-0 items-center gap-2">
+                {food.is_custom && (
+                  <div className="flex gap-3 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => openEditForm(food)}
+                      className="text-accent hover:underline"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(food)}
+                      className="text-off-target hover:underline"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => toggleFavorite(food)}
+                  data-testid="food-favorite"
+                  aria-pressed={favorites.has(food.id)}
+                  aria-label={
+                    favorites.has(food.id)
+                      ? `Remover ${food.name} dos favoritos`
+                      : `Favoritar ${food.name}`
+                  }
+                  className="-m-1.5 rounded-lg p-1.5 transition-colors hover:bg-background focus:outline-none focus:ring-2 focus:ring-accent"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                    className={
+                      "size-5 transition-colors " +
+                      (favorites.has(food.id)
+                        ? "fill-carb-medium stroke-carb-medium"
+                        : "fill-none stroke-muted")
+                    }
                   >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(food)}
-                    className="text-off-target hover:underline"
-                  >
-                    Excluir
-                  </button>
-                </div>
-              )}
+                    <path d="M12 2.5l2.9 6.11 6.6.62-4.99 4.53 1.42 6.49L12 16.9l-5.93 3.35 1.42-6.49-4.99-4.53 6.6-.62L12 2.5z" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-4 gap-2 text-center text-xs text-muted">
               <div>
