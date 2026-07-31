@@ -85,3 +85,4 @@ Plan: docs/superpowers/plans/2026-07-30-gerador-cardapio.md
 NOTE: migrations aditivas/retrocompatíveis (favorites table; meals slot/option_label/selected default true, slot=order backfill). OPENAI_API_KEY in .env.local; MUST add to Vercel at deploy.
 - Task 1 (migrations + Meal type): complete (controller). food_favorites (RLS) + meals slot/option_label/selected applied to prod DB; advisor clean (only pre-existing WARNs). Meal type extended. tsc clean.
 - Task 2 (solver): complete (commit b920c0e, review clean, 4 tests). mealSubTargets + scaleOptionToKcal pure.
+- Task 3 (favorites + basics): complete (commit c72c2de, review clean). favorite API + GET /api/favorites + star toggle; data/basics.json 23 items (all in TACO). basics integrity test. vitest 37.
