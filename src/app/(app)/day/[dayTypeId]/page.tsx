@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import DayEditor from "@/components/DayEditor";
+import MenuGenerator from "@/components/MenuGenerator";
 import type { DayType } from "@/lib/types";
 
 export default async function DayPage({
@@ -20,6 +21,7 @@ export default async function DayPage({
   return (
     <main className="flex flex-col gap-4">
       <h1 className="text-lg font-semibold text-foreground">{dayType.name}</h1>
+      <MenuGenerator dayType={dayType as DayType} />
       <DayEditor dayType={dayType as DayType} />
     </main>
   );
