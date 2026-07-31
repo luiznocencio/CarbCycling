@@ -5,6 +5,7 @@ import type { Food } from "@/lib/types";
 const arroz: Food = {
   id: "1", user_id: null, name: "Arroz", is_custom: false,
   kcal_per_100g: 124, protein_per_100g: 2.6, carbs_per_100g: 25.8, fat_per_100g: 1.0,
+  unit_name: null, unit_grams: null,
 };
 
 describe("itemMacros", () => {

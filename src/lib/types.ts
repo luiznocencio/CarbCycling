@@ -21,6 +21,8 @@ export interface Food {
   carbs_per_100g: number;
   fat_per_100g: number;
   is_custom: boolean;
+  unit_name: string | null;
+  unit_grams: number | null;
 }
 
 export interface DayType {

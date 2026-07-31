@@ -59,3 +59,12 @@ Plan: docs/superpowers/plans/2026-07-30-perfil-metas-inteligentes.md
 FEATURE A COMPLETE (Tasks 1-8) on branch feature/smarter-targets.
 Final review (controller self-review; opus subagent hit session limit): no Critical/Important. Ready for prod merge. Minor: recalc endpoint sequential updates (re-run fixes partial state) — by design/low risk single-user.
 MERGED to main (ff, 9bf7f88..f125def) + pushed; Vercel redeployed. Prod smoke via browser: /settings shows new ProfileForm; live BMR preview exact (Mifflin 1768, Harris 1844, TDEE 2740). Feature A LIVE.
+
+=== Feature B (alimentos por unidade) — branch feature/food-units ===
+Plan: docs/superpowers/plans/2026-07-30-alimentos-por-unidade.md
+DECISION: meal_items rename handled via EXPAND-CONTRACT (shared prod DB) — Task 5 migration is additive
+(add quantity+unit, keep quantity_g nullable); a final contract migration drops quantity_g AFTER deploy.
+- Task 1 (foods unit cols + set_food_unit fn + types): complete (controller). Migration food_units applied
+  to prod DB (0003_food_units.sql versioned). Security: revoked EXECUTE from anon (advisor lint cleared);
+  authenticated-execute is intentional. Food type +unit_name/unit_grams. macros.test.ts arroz fixture
+  patched (unit_name/unit_grams null) to keep tsc green until Task 5. tsc clean, vitest green.
