@@ -9,6 +9,8 @@ type FormState = {
   protein_per_100g: string;
   carbs_per_100g: string;
   fat_per_100g: string;
+  unit_name: string;
+  unit_grams: string;
 };
 
 const emptyForm: FormState = {
@@ -17,6 +19,8 @@ const emptyForm: FormState = {
   protein_per_100g: "",
   carbs_per_100g: "",
   fat_per_100g: "",
+  unit_name: "",
+  unit_grams: "",
 };
 
 function toFormState(food: Food): FormState {
@@ -26,7 +30,20 @@ function toFormState(food: Food): FormState {
     protein_per_100g: String(food.protein_per_100g),
     carbs_per_100g: String(food.carbs_per_100g),
     fat_per_100g: String(food.fat_per_100g),
+    unit_name: food.unit_name ?? "",
+    unit_grams: food.unit_grams != null ? String(food.unit_grams) : "",
   };
+}
+
+type UnitFormState = { name: string; grams: string };
+
+const emptyUnitForm: UnitFormState = { name: "", grams: "" };
+
+function formatUnit(food: Food): string {
+  if (food.unit_name && food.unit_grams != null) {
+    return `1 ${food.unit_name} = ${food.unit_grams} g`;
+  }
+  return "sem unidade";
 }
 
 export default function FoodBank() {
@@ -40,6 +57,11 @@ export default function FoodBank() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const [unitEditingId, setUnitEditingId] = useState<string | null>(null);
+  const [unitForm, setUnitForm] = useState<UnitFormState>(emptyUnitForm);
+  const [unitSaving, setUnitSaving] = useState(false);
+  const [unitError, setUnitError] = useState<string | null>(null);
 
   // Contador de mutações locais (criar/editar/excluir). Uma resposta de busca
   // que ficou obsoleta por uma mutação ocorrida durante o fetch é descartada,
@@ -90,6 +112,7 @@ export default function FoodBank() {
     setForm(toFormState(food));
     setFormError(null);
     setFormOpen(true);
+    closeUnitEdit();
   }
 
   function closeForm() {
@@ -97,6 +120,61 @@ export default function FoodBank() {
     setEditingId(null);
     setForm(emptyForm);
     setFormError(null);
+  }
+
+  function openUnitEdit(food: Food) {
+    setUnitEditingId(food.id);
+    setUnitForm({
+      name: food.unit_name ?? "",
+      grams: food.unit_grams != null ? String(food.unit_grams) : "",
+    });
+    setUnitError(null);
+  }
+
+  function closeUnitEdit() {
+    setUnitEditingId(null);
+    setUnitForm(emptyUnitForm);
+    setUnitError(null);
+  }
+
+  async function handleUnitSave(foodId: string) {
+    setUnitError(null);
+
+    const trimmedName = unitForm.name.trim();
+    const trimmedGrams = unitForm.grams.trim();
+    const unitName = trimmedName === "" ? null : trimmedName;
+    const unitGrams = trimmedGrams === "" ? null : Number(trimmedGrams);
+
+    if ((unitName === null) !== (unitGrams === null)) {
+      setUnitError("Informe nome e peso da unidade, ou deixe os dois em branco.");
+      return;
+    }
+    if (unitGrams !== null && !(unitGrams > 0)) {
+      setUnitError("Peso da unidade deve ser maior que zero.");
+      return;
+    }
+
+    setUnitSaving(true);
+    try {
+      const res = await fetch(`/api/foods/${foodId}/unit`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unit_name: unitName, unit_grams: unitGrams }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "Falha ao salvar unidade");
+
+      setFoods((prev) =>
+        prev.map((f) =>
+          f.id === foodId ? { ...f, unit_name: unitName, unit_grams: unitGrams } : f,
+        ),
+      );
+      closeUnitEdit();
+    } catch (err) {
+      setUnitError(err instanceof Error ? err.message : "Falha ao salvar unidade");
+    } finally {
+      setUnitSaving(false);
+    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -108,6 +186,10 @@ export default function FoodBank() {
     const protein = Number(form.protein_per_100g);
     const carbs = Number(form.carbs_per_100g);
     const fat = Number(form.fat_per_100g);
+    const trimmedUnitName = form.unit_name.trim();
+    const trimmedUnitGrams = form.unit_grams.trim();
+    const unitName = trimmedUnitName === "" ? null : trimmedUnitName;
+    const unitGrams = trimmedUnitGrams === "" ? null : Number(trimmedUnitGrams);
 
     if (!name) {
       setFormError("Informe o nome do alimento.");
@@ -117,6 +199,14 @@ export default function FoodBank() {
       setFormError("Macros devem ser números válidos (0 ou mais).");
       return;
     }
+    if ((unitName === null) !== (unitGrams === null)) {
+      setFormError("Informe nome e peso da unidade, ou deixe os dois em branco.");
+      return;
+    }
+    if (unitGrams !== null && !(unitGrams > 0)) {
+      setFormError("Peso da unidade deve ser maior que zero.");
+      return;
+    }
 
     const payload = {
       name,
@@ -124,6 +214,8 @@ export default function FoodBank() {
       protein_per_100g: protein,
       carbs_per_100g: carbs,
       fat_per_100g: fat,
+      unit_name: unitName,
+      unit_grams: unitGrams,
     };
 
     setSaving(true);
@@ -160,6 +252,7 @@ export default function FoodBank() {
       mutationRef.current += 1;
       setFoods((prev) => prev.filter((f) => f.id !== food.id));
       if (editingId === food.id) closeForm();
+      if (unitEditingId === food.id) closeUnitEdit();
     }
   }
 
@@ -288,6 +381,41 @@ export default function FoodBank() {
             </label>
           </div>
 
+          <div className="flex flex-col gap-1.5 rounded-lg border border-dashed border-border p-2.5">
+            <span className="text-xs text-muted">Unidade prática (opcional)</span>
+            <div className="flex gap-3">
+              <label className="flex flex-1 flex-col gap-1 text-xs text-muted">
+                Nome
+                <input
+                  type="text"
+                  placeholder="Ex.: ovo, fatia, unidade"
+                  value={form.unit_name}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, unit_name: e.target.value }))
+                  }
+                  data-testid="food-form-unit-name-input"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+              </label>
+              <label className="flex w-24 flex-col gap-1 text-xs text-muted">
+                Peso (g)
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="any"
+                  placeholder="50"
+                  value={form.unit_grams}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, unit_grams: e.target.value }))
+                  }
+                  data-testid="food-form-unit-grams-input"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+              </label>
+            </div>
+          </div>
+
           {formError && <p className="text-xs text-off-target">{formError}</p>}
 
           <button
@@ -375,6 +503,69 @@ export default function FoodBank() {
                 gord
               </div>
             </div>
+
+            <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
+              <span data-testid="food-unit-display" className="text-xs text-muted">
+                {formatUnit(food)}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  unitEditingId === food.id ? closeUnitEdit() : openUnitEdit(food)
+                }
+                className="shrink-0 text-xs text-accent hover:underline"
+              >
+                {unitEditingId === food.id ? "Cancelar" : "Editar unidade"}
+              </button>
+            </div>
+
+            {unitEditingId === food.id && (
+              <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-2.5">
+                <div className="flex gap-2">
+                  <label className="flex flex-1 flex-col gap-1 text-[11px] text-muted">
+                    Unidade
+                    <input
+                      type="text"
+                      placeholder="Ex.: ovo, fatia, unidade"
+                      value={unitForm.name}
+                      onChange={(e) =>
+                        setUnitForm((f) => ({ ...f, name: e.target.value }))
+                      }
+                      data-testid="food-unit-name-input"
+                      className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </label>
+                  <label className="flex w-20 flex-col gap-1 text-[11px] text-muted">
+                    Peso (g)
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step="any"
+                      placeholder="50"
+                      value={unitForm.grams}
+                      onChange={(e) =>
+                        setUnitForm((f) => ({ ...f, grams: e.target.value }))
+                      }
+                      data-testid="food-unit-grams-input"
+                      className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </label>
+                </div>
+                {unitError && (
+                  <p className="text-[11px] text-off-target">{unitError}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleUnitSave(food.id)}
+                  disabled={unitSaving}
+                  data-testid="food-unit-save"
+                  className="self-end rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition-opacity disabled:opacity-60"
+                >
+                  {unitSaving ? "Salvando..." : "Salvar unidade"}
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
