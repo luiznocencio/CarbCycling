@@ -98,6 +98,25 @@ test("fluxo principal: signup -> metas -> alimento -> cardápio -> dashboard", a
   // 165 kcal/100g * 200g = 330 kcal
   await expect(page.getByTestId("day-total-kcal")).toHaveText("330");
 
+  // Adiciona um alimento TACO COM unidade (ovo), por unidade
+  const eggName = "Ovo, de galinha, inteiro, cozido";
+  await page.getByTestId("item-food-search").fill(eggName);
+  await page.getByRole("button", { name: new RegExp(eggName) }).click();
+  // alimento com unidade → o toggle aparece (default "unidade")
+  await expect(page.getByTestId("item-unit-toggle")).toBeVisible();
+  await page.getByTestId("item-qty-input").fill("2");
+  await page.getByTestId("item-add").click();
+  // 2 unidades × 50g = 100g → item exibido com a unidade e as gramas derivadas
+  await expect(
+    page.getByTestId("item-display").filter({ hasText: "unidade" }),
+  ).toContainText("(100");
+  // total do dia aumentou além dos 330
+  await expect
+    .poll(async () =>
+      Number((await page.getByTestId("day-total-kcal").innerText()).replace(/\D/g, "")),
+    )
+    .toBeGreaterThan(330);
+
   // 5. Dashboard: card do dia mapeado ao tipo criado
   await page.goto("/");
   await expect(page.getByTestId("day-card-0")).toBeVisible();
