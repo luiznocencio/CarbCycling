@@ -1,0 +1,542 @@
+[
+  {
+    "name": "Biscoito, doce, maisena",
+    "unit_name": "unidade",
+    "unit_grams": 6
+  },
+  {
+    "name": "Biscoito, doce, recheado com chocolate",
+    "unit_name": "unidade",
+    "unit_grams": 8
+  },
+  {
+    "name": "Biscoito, doce, recheado com morango",
+    "unit_name": "unidade",
+    "unit_grams": 8
+  },
+  {
+    "name": "Biscoito, doce, wafer, recheado de chocolate",
+    "unit_name": "unidade",
+    "unit_grams": 6
+  },
+  {
+    "name": "Biscoito, doce, wafer, recheado de morango",
+    "unit_name": "unidade",
+    "unit_grams": 6
+  },
+  {
+    "name": "Biscoito, salgado, cream cracker",
+    "unit_name": "unidade",
+    "unit_grams": 7
+  },
+  {
+    "name": "Pão, aveia, forma",
+    "unit_name": "fatia",
+    "unit_grams": 25
+  },
+  {
+    "name": "Pão, de soja",
+    "unit_name": "fatia",
+    "unit_grams": 25
+  },
+  {
+    "name": "Pão, glúten, forma",
+    "unit_name": "fatia",
+    "unit_grams": 25
+  },
+  {
+    "name": "Pão, milho, forma",
+    "unit_name": "fatia",
+    "unit_grams": 25
+  },
+  {
+    "name": "Pão, trigo, forma, integral",
+    "unit_name": "fatia",
+    "unit_grams": 25
+  },
+  {
+    "name": "Pão, trigo, francês",
+    "unit_name": "unidade",
+    "unit_grams": 50
+  },
+  {
+    "name": "Pão, trigo, sovado",
+    "unit_name": "fatia",
+    "unit_grams": 30
+  },
+  {
+    "name": "Torrada, pão francês",
+    "unit_name": "unidade",
+    "unit_grams": 8
+  },
+  {
+    "name": "Biscoito, polvilho doce",
+    "unit_name": "unidade",
+    "unit_grams": 4
+  },
+  {
+    "name": "Pão, de queijo, assado",
+    "unit_name": "unidade",
+    "unit_grams": 20
+  },
+  {
+    "name": "Pão, de queijo, cru",
+    "unit_name": "unidade",
+    "unit_grams": 25
+  },
+  {
+    "name": "Tomate, salada",
+    "unit_name": "unidade",
+    "unit_grams": 100
+  },
+  {
+    "name": "Cebola, crua",
+    "unit_name": "unidade",
+    "unit_grams": 100
+  },
+  {
+    "name": "Cenoura, crua",
+    "unit_name": "unidade",
+    "unit_grams": 60
+  },
+  {
+    "name": "Batata, inglesa, crua",
+    "unit_name": "unidade",
+    "unit_grams": 100
+  },
+  {
+    "name": "Batata, doce, crua",
+    "unit_name": "unidade",
+    "unit_grams": 130
+  },
+  {
+    "name": "Pepino, cru",
+    "unit_name": "unidade",
+    "unit_grams": 150
+  },
+  {
+    "name": "Pimentão, amarelo, cru",
+    "unit_name": "unidade",
+    "unit_grams": 120
+  },
+  {
+    "name": "Pimentão, verde, cru",
+    "unit_name": "unidade",
+    "unit_grams": 120
+  },
+  {
+    "name": "Pimentão, vermelho, cru",
+    "unit_name": "unidade",
+    "unit_grams": 120
+  },
+  {
+    "name": "Berinjela, crua",
+    "unit_name": "unidade",
+    "unit_grams": 250
+  },
+  {
+    "name": "Abobrinha, italiana, crua",
+    "unit_name": "unidade",
+    "unit_grams": 200
+  },
+  {
+    "name": "Beterraba, crua",
+    "unit_name": "unidade",
+    "unit_grams": 130
+  },
+  {
+    "name": "Chuchu, cru",
+    "unit_name": "unidade",
+    "unit_grams": 200
+  },
+  {
+    "name": "Alho, cru",
+    "unit_name": "dente",
+    "unit_grams": 3
+  },
+  {
+    "name": "Batata, inglesa, cozida",
+    "unit_name": "unidade",
+    "unit_grams": 100
+  },
+  {
+    "name": "Batata, doce, cozida",
+    "unit_name": "unidade",
+    "unit_grams": 120
+  },
+  {
+    "name": "Beterraba, cozida",
+    "unit_name": "unidade",
+    "unit_grams": 120
+  },
+  {
+    "name": "Cenoura, cozida",
+    "unit_name": "unidade",
+    "unit_grams": 55
+  },
+  {
+    "name": "Berinjela, cozida",
+    "unit_name": "unidade",
+    "unit_grams": 220
+  },
+  {
+    "name": "Chuchu, cozido",
+    "unit_name": "unidade",
+    "unit_grams": 180
+  },
+  {
+    "name": "Abobrinha, italiana, cozida",
+    "unit_name": "unidade",
+    "unit_grams": 180
+  },
+  {
+    "name": "Abacate, cru",
+    "unit_name": "unidade",
+    "unit_grams": 200
+  },
+  {
+    "name": "Ameixa, crua",
+    "unit_name": "unidade",
+    "unit_grams": 30
+  },
+  {
+    "name": "Banana, da terra, crua",
+    "unit_name": "unidade",
+    "unit_grams": 100
+  },
+  {
+    "name": "Banana, maçã, crua",
+    "unit_name": "unidade",
+    "unit_grams": 60
+  },
+  {
+    "name": "Banana, nanica, crua",
+    "unit_name": "unidade",
+    "unit_grams": 120
+  },
+  {
+    "name": "Banana, ouro, crua",
+    "unit_name": "unidade",
+    "unit_grams": 30
+  },
+  {
+    "name": "Banana, pacova, crua",
+    "unit_name": "unidade",
+    "unit_grams": 150
+  },
+  {
+    "name": "Banana, prata, crua",
+    "unit_name": "unidade",
+    "unit_grams": 90
+  },
+  {
+    "name": "Caqui, chocolate, cru",
+    "unit_name": "unidade",
+    "unit_grams": 150
+  },
+  {
+    "name": "Carambola, crua",
+    "unit_name": "unidade",
+    "unit_grams": 100
+  },
+  {
+    "name": "Figo, cru",
+    "unit_name": "unidade",
+    "unit_grams": 40
+  },
+  {
+    "name": "Goiaba, branca, com casca, crua",
+    "unit_name": "unidade",
+    "unit_grams": 170
+  },
+  {
+    "name": "Goiaba, vermelha, com casca, crua",
+    "unit_name": "unidade",
+    "unit_grams": 170
+  },
+  {
+    "name": "Kiwi, cru",
+    "unit_name": "unidade",
+    "unit_grams": 80
+  },
+  {
+    "name": "Laranja, baía, crua",
+    "unit_name": "unidade",
+    "unit_grams": 180
+  },
+  {
+    "name": "Laranja, da terra, crua",
+    "unit_name": "unidade",
+    "unit_grams": 150
+  },
+  {
+    "name": "Laranja, lima, crua",
+    "unit_name": "unidade",
+    "unit_grams": 130
+  },
+  {
+    "name": "Laranja, pêra, crua",
+    "unit_name": "unidade",
+    "unit_grams": 180
+  },
+  {
+    "name": "Laranja, valência, crua",
+    "unit_name": "unidade",
+    "unit_grams": 180
+  },
+  {
+    "name": "Limão, tahiti, cru",
+    "unit_name": "unidade",
+    "unit_grams": 60
+  },
+  {
+    "name": "Maçã, Argentina, com casca, crua",
+    "unit_name": "unidade",
+    "unit_grams": 130
+  },
+  {
+    "name": "Maçã, Fuji, com casca, crua",
+    "unit_name": "unidade",
+    "unit_grams": 130
+  },
+  {
+    "name": "Mamão, Papaia, cru",
+    "unit_name": "unidade",
+    "unit_grams": 230
+  },
+  {
+    "name": "Manga, Haden, crua",
+    "unit_name": "unidade",
+    "unit_grams": 200
+  },
+  {
+    "name": "Manga, Palmer, crua",
+    "unit_name": "unidade",
+    "unit_grams": 200
+  },
+  {
+    "name": "Manga, Tommy Atkins, crua",
+    "unit_name": "unidade",
+    "unit_grams": 200
+  },
+  {
+    "name": "Maracujá, cru",
+    "unit_name": "unidade",
+    "unit_grams": 35
+  },
+  {
+    "name": "Mexerica, Murcote, crua",
+    "unit_name": "unidade",
+    "unit_grams": 100
+  },
+  {
+    "name": "Mexerica, Rio, crua",
+    "unit_name": "unidade",
+    "unit_grams": 100
+  },
+  {
+    "name": "Morango, cru",
+    "unit_name": "unidade",
+    "unit_grams": 12
+  },
+  {
+    "name": "Nêspera, crua",
+    "unit_name": "unidade",
+    "unit_grams": 20
+  },
+  {
+    "name": "Pêra, Park, crua",
+    "unit_name": "unidade",
+    "unit_grams": 130
+  },
+  {
+    "name": "Pêra, Williams, crua",
+    "unit_name": "unidade",
+    "unit_grams": 130
+  },
+  {
+    "name": "Pêssego, Aurora, cru",
+    "unit_name": "unidade",
+    "unit_grams": 100
+  },
+  {
+    "name": "Romã, crua",
+    "unit_name": "unidade",
+    "unit_grams": 200
+  },
+  {
+    "name": "Tangerina, Poncã, crua",
+    "unit_name": "unidade",
+    "unit_grams": 120
+  },
+  {
+    "name": "Ovo, de codorna, inteiro, cru",
+    "unit_name": "unidade",
+    "unit_grams": 10
+  },
+  {
+    "name": "Ovo, de galinha, clara, cozida/10minutos",
+    "unit_name": "unidade",
+    "unit_grams": 33
+  },
+  {
+    "name": "Ovo, de galinha, gema, cozida/10minutos",
+    "unit_name": "unidade",
+    "unit_grams": 17
+  },
+  {
+    "name": "Ovo, de galinha, inteiro, cozido/10minutos",
+    "unit_name": "unidade",
+    "unit_grams": 50
+  },
+  {
+    "name": "Ovo, de galinha, inteiro, cru",
+    "unit_name": "unidade",
+    "unit_grams": 50
+  },
+  {
+    "name": "Ovo, de galinha, inteiro, frito",
+    "unit_name": "unidade",
+    "unit_grams": 50
+  },
+  {
+    "name": "Queijo, mozarela",
+    "unit_name": "fatia",
+    "unit_grams": 20
+  },
+  {
+    "name": "Queijo, prato",
+    "unit_name": "fatia",
+    "unit_grams": 20
+  },
+  {
+    "name": "Queijo, minas, frescal",
+    "unit_name": "fatia",
+    "unit_grams": 30
+  },
+  {
+    "name": "Queijo, minas, meia cura",
+    "unit_name": "fatia",
+    "unit_grams": 30
+  },
+  {
+    "name": "Presunto, com capa de gordura",
+    "unit_name": "fatia",
+    "unit_grams": 20
+  },
+  {
+    "name": "Presunto, sem capa de gordura",
+    "unit_name": "fatia",
+    "unit_grams": 20
+  },
+  {
+    "name": "Apresuntado",
+    "unit_name": "fatia",
+    "unit_grams": 20
+  },
+  {
+    "name": "Mortadela",
+    "unit_name": "fatia",
+    "unit_grams": 20
+  },
+  {
+    "name": "Salame",
+    "unit_name": "fatia",
+    "unit_grams": 10
+  },
+  {
+    "name": "Coxinha de frango, frita",
+    "unit_name": "unidade",
+    "unit_grams": 70
+  },
+  {
+    "name": "Croquete, de carne, frito",
+    "unit_name": "unidade",
+    "unit_grams": 35
+  },
+  {
+    "name": "Empada de frango, pré-cozida, assada",
+    "unit_name": "unidade",
+    "unit_grams": 40
+  },
+  {
+    "name": "Quibe, assado",
+    "unit_name": "unidade",
+    "unit_grams": 50
+  },
+  {
+    "name": "Quibe, frito",
+    "unit_name": "unidade",
+    "unit_grams": 50
+  },
+  {
+    "name": "Pastel, de carne, frito",
+    "unit_name": "unidade",
+    "unit_grams": 60
+  },
+  {
+    "name": "Pastel, de queijo, frito",
+    "unit_name": "unidade",
+    "unit_grams": 60
+  },
+  {
+    "name": "Acarajé",
+    "unit_name": "unidade",
+    "unit_grams": 90
+  },
+  {
+    "name": "Bolinho de arroz",
+    "unit_name": "unidade",
+    "unit_grams": 30
+  },
+  {
+    "name": "Hambúrguer, bovino, cru",
+    "unit_name": "unidade",
+    "unit_grams": 100
+  },
+  {
+    "name": "Hambúrguer, bovino, frito",
+    "unit_name": "unidade",
+    "unit_grams": 90
+  },
+  {
+    "name": "Hambúrguer, bovino, grelhado",
+    "unit_name": "unidade",
+    "unit_grams": 90
+  },
+  {
+    "name": "Iogurte, natural",
+    "unit_name": "pote",
+    "unit_grams": 170
+  },
+  {
+    "name": "Iogurte, natural, desnatado",
+    "unit_name": "pote",
+    "unit_grams": 170
+  },
+  {
+    "name": "Iogurte, sabor abacaxi",
+    "unit_name": "pote",
+    "unit_grams": 170
+  },
+  {
+    "name": "Iogurte, sabor morango",
+    "unit_name": "pote",
+    "unit_grams": 170
+  },
+  {
+    "name": "Iogurte, sabor pêssego",
+    "unit_name": "pote",
+    "unit_grams": 170
+  },
+  {
+    "name": "Bebida láctea, pêssego",
+    "unit_name": "pote",
+    "unit_grams": 170
+  },
+  {
+    "name": "Queijo, petit suisse, morango",
+    "unit_name": "pote",
+    "unit_grams": 45
+  }
+]
