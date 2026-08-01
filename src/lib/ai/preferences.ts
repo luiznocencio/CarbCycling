@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { openaiClient } from "@/lib/ai/openai";
 
 export type Preferences = {
   likes: string[]; dislikes: string[]; avoid: string[];
@@ -81,4 +82,52 @@ export async function loadPreferences(supabase: SupabaseClient): Promise<Prefere
     likes: data.likes ?? [], dislikes: data.dislikes ?? [], avoid: data.avoid ?? [],
     always_include: data.always_include ?? [], notes: data.notes ?? "",
   };
+}
+
+const CHAT_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["reply", "preferences"],
+  properties: {
+    reply: { type: "string" },
+    preferences: {
+      type: "object",
+      additionalProperties: false,
+      required: ["likes", "dislikes", "avoid", "always_include", "notes"],
+      properties: {
+        likes: { type: "array", items: { type: "string" } },
+        dislikes: { type: "array", items: { type: "string" } },
+        avoid: { type: "array", items: { type: "string" } },
+        always_include: { type: "array", items: { type: "string" } },
+        notes: { type: "string" },
+      },
+    },
+  },
+} as const;
+
+export async function chatPreferences(input: {
+  messages: { role: "user" | "assistant"; content: string }[];
+  current: Preferences;
+}): Promise<{ reply: string; preferences: Preferences }> {
+  const client = openaiClient();
+  const system =
+    "Você ajuda a levantar as preferências alimentares do usuário, em português do Brasil. " +
+    "Faça no máximo 1–2 perguntas curtas por vez. A cada turno devolva 'reply' (sua fala) E " +
+    "'preferences' = o registro ATUALIZADO, acumulando o que já existe em 'atual' com o que o " +
+    "usuário disse (não zere o que não foi contradito). Não invente: registre só o que foi dito. " +
+    "Alergias e restrições ('não posso', 'sem lactose') vão em 'avoid'. Alimentos que ele quer " +
+    "sempre presentes vão em 'always_include'.";
+  const res = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: JSON.stringify({ atual: input.current }) },
+      ...input.messages,
+    ],
+    response_format: { type: "json_schema", json_schema: { name: "prefs_chat", strict: true, schema: CHAT_SCHEMA } },
+  });
+  const content = res.choices[0]?.message?.content;
+  if (!content) throw new Error("Resposta vazia da IA");
+  const parsed = JSON.parse(content) as { reply: string; preferences: unknown };
+  return { reply: parsed.reply, preferences: sanitizePrefs(parsed.preferences) };
 }
