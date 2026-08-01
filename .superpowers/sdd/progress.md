@@ -108,3 +108,9 @@ C2 STATE: Tasks 1-3 DONE on branch feature/meal-substitutions. REMAINING: Task 4
 C2 CODE COMPLETE (Tasks 1-5) on branch feature/meal-substitutions.
 Final review (controller self-review; opus subagent hit session limit): no Critical/Important. suggest-option (404 ownership, 502 no-litter, selected=false, sanitized include/exclude, IA via validateItems+solver, RLS-scoped); scaleOptionToTarget robust fallbacks; OpenAI key server-side only. Minor: DayEditor.tsx now large (~1100 lines) — future split candidate. Ready for prod merge (OpenAI key already in Vercel — no extra deploy step).
 MERGED to main (ff, 8d172d1..412cb54) + pushed; Vercel redeploying. Key not leaked. Branch deleted. FEATURE C2 LIVE (OpenAI key already in Vercel).
+
+=== Feature E1 (preferências alimentares) — branch feat/e1-preferencias ===
+Spec: docs/superpowers/specs/2026-08-01-preferencias-alimentares-design.md
+Plan: docs/superpowers/plans/2026-08-01-preferencias-alimentares.md
+NOTE: migração aditiva (nova tabela user_preferences, RLS) — não toca foods/meals/profiles; prod intacto até merge. OPENAI_API_KEY já em Vercel (sem passo extra no deploy). Prefs = texto livre; match por nome normalizado. IA nunca é fonte de verdade (chat só propõe; PUT grava).
+- Task 1 (migração user_preferences): complete (commit 06f47cf, controller via MCP). Tabela + RLS aplicada ao prod DB (rows=0, policies=4, rls=true); advisor security sem alerta novo (só 2 WARNs pré-existentes: set_food_unit, leaked-password). Arquivo supabase/migrations/0008_user_preferences.sql.
