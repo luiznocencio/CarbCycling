@@ -1,10 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { mealSubTargets, scaleOptionToKcal } from "@/lib/nutrition/solver";
+import { mealSubTargets, scaleOptionToKcal, scaleOptionToTarget } from "@/lib/nutrition/solver";
 import type { Food } from "@/lib/types";
+import { mealMacros } from "@/lib/nutrition/macros";
 
 const arroz: Food = {
   id: "1", user_id: null, name: "Arroz", is_custom: false,
   kcal_per_100g: 124, protein_per_100g: 2.6, carbs_per_100g: 25.8, fat_per_100g: 1.0,
+  unit_name: null, unit_grams: null,
+};
+
+const frango: Food = {
+  id: "f", user_id: null, name: "Frango", is_custom: false,
+  kcal_per_100g: 165, protein_per_100g: 31, carbs_per_100g: 0, fat_per_100g: 3.6,
   unit_name: null, unit_grams: null,
 };
 
@@ -35,5 +42,27 @@ describe("scaleOptionToKcal", () => {
     const zero: Food = { ...arroz, kcal_per_100g: 0 };
     const scaled = scaleOptionToKcal([{ quantity: 50, unit: "g", food: zero }], 300);
     expect(scaled[0].quantity).toBe(50);
+  });
+});
+
+describe("scaleOptionToTarget", () => {
+  it("bate kcal e proteína quando viável (2 grupos)", () => {
+    const r = scaleOptionToTarget(
+      [
+        { quantity: 100, unit: "g" as const, food: frango },
+        { quantity: 100, unit: "g" as const, food: arroz },
+      ],
+      { kcal: 500, protein_g: 40 },
+    );
+    const m = mealMacros(r);
+    expect(Math.abs(m.kcal - 500)).toBeLessThanOrEqual(3);
+    expect(Math.abs(m.protein_g - 40)).toBeLessThanOrEqual(2);
+  });
+  it("inviável (um só grupo) → fallback só-kcal", () => {
+    const r = scaleOptionToTarget([{ quantity: 100, unit: "g", food: frango }], {
+      kcal: 330,
+      protein_g: 10,
+    });
+    expect(r[0].quantity).toBe(200); // 330/165 = 2
   });
 });

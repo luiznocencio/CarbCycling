@@ -1,5 +1,5 @@
 import type { Food } from "@/lib/types";
-import { mealMacros } from "@/lib/nutrition/macros";
+import { mealMacros, itemMacros } from "@/lib/nutrition/macros";
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -31,4 +31,34 @@ export function scaleOptionToKcal(
   if (currentKcal <= 0) return items;
   const factor = targetKcal / currentKcal;
   return items.map((it) => ({ ...it, quantity: round1(it.quantity * factor) }));
+}
+
+export function scaleOptionToTarget(
+  items: { quantity: number; unit: "g" | "unit"; food: Food }[],
+  target: { kcal: number; protein_g: number },
+): { quantity: number; unit: "g" | "unit"; food: Food }[] {
+  if (items.length === 0) return items;
+  const targetFrac = target.kcal > 0 ? (target.protein_g * 4) / target.kcal : 0;
+  const groupA: typeof items = [];
+  const groupB: typeof items = [];
+  for (const it of items) {
+    const m = itemMacros(it, it.food);
+    const frac = m.kcal > 0 ? (m.protein_g * 4) / m.kcal : 0;
+    (frac > targetFrac ? groupA : groupB).push(it);
+  }
+  if (groupA.length === 0 || groupB.length === 0) {
+    return scaleOptionToKcal(items, target.kcal);
+  }
+  const macA = mealMacros(groupA);
+  const macB = mealMacros(groupB);
+  const Ka = macA.kcal, Pa = macA.protein_g, Kb = macB.kcal, Pb = macB.protein_g;
+  const det = Ka * Pb - Kb * Pa;
+  if (det === 0) return scaleOptionToKcal(items, target.kcal);
+  const a = (target.kcal * Pb - target.protein_g * Kb) / det;
+  const b = (Ka * target.protein_g - Pa * target.kcal) / det;
+  if (!isFinite(a) || !isFinite(b) || a < 0 || b < 0) {
+    return scaleOptionToKcal(items, target.kcal);
+  }
+  const inA = new Set(groupA);
+  return items.map((it) => ({ ...it, quantity: round1(it.quantity * (inA.has(it) ? a : b)) }));
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { mealSubTargets, scaleOptionToKcal } from "@/lib/nutrition/solver";
+import { mealSubTargets, scaleOptionToTarget } from "@/lib/nutrition/solver";
 import { mealMacros } from "@/lib/nutrition/macros";
 import { generateMenu } from "@/lib/ai/menu";
 import basics from "@/../data/basics.json";
@@ -61,7 +61,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const withFood = opt.items
         .map((it) => ({ ...it, food: poolMap.get(it.food_id)! }))
         .filter((it) => it.food);
-      const scaled = scaleOptionToKcal(withFood, sub.kcal);
+      const scaled = scaleOptionToTarget(withFood, { kcal: sub.kcal, protein_g: sub.protein_g });
       return { label: `Opção ${oi + 1}`, items: scaled, macros: mealMacros(scaled) };
     });
     return { name: slot.name, slot: si, options };
