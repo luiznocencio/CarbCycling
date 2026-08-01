@@ -347,9 +347,11 @@ function ItemRow({
 
 function OptionTabs({
   options,
+  activeId,
   onSelect,
 }: {
   options: MealWithItems[];
+  activeId: string;
   onSelect: (meal: MealWithItems) => void;
 }) {
   return (
@@ -359,27 +361,388 @@ function OptionTabs({
       className="flex gap-1.5 overflow-x-auto pb-0.5"
     >
       {options.map((option) => {
-        const active = option.selected;
+        // "viewing" (aba aberta para edição) é independente de "selected"
+        // (a opção escolhida para o total do dia) — uma opção nova criada
+        // fica em foco para edição sem virar a opção escolhida.
+        const viewing = option.id === activeId;
         return (
           <button
             key={option.id}
             type="button"
             role="tab"
             data-testid="option-tab"
-            aria-pressed={active}
-            aria-selected={active}
+            aria-pressed={option.selected}
+            aria-selected={viewing}
             onClick={() => onSelect(option)}
             className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
-              active
+              viewing
                 ? "bg-accent text-white"
                 : "bg-background text-muted hover:text-foreground"
             }`}
           >
-            {active && <span aria-hidden="true">✓ </span>}
+            {option.selected && <span aria-hidden="true">✓ </span>}
             {option.option_label}
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function FoodSearchPicker({
+  onPick,
+  placeholder,
+}: {
+  onPick: (food: Food) => void;
+  placeholder: string;
+}) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Food[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      setSearching(true);
+      fetch(`/api/foods?q=${encodeURIComponent(query.trim())}`, {
+        signal: controller.signal,
+      })
+        .then(async (res) => {
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error ?? "Falha ao buscar alimentos");
+          setResults((body as Food[]).slice(0, 8));
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") setResults([]);
+        })
+        .finally(() => setSearching(false));
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query]);
+
+  return (
+    <div className="relative">
+      <input
+        type="search"
+        inputMode="search"
+        placeholder={placeholder}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        data-testid="suggest-food-search"
+        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+      />
+      {query.trim() && (
+        <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-border bg-card shadow-sm">
+          {searching && (
+            <p className="px-3 py-2 text-xs text-muted">Buscando...</p>
+          )}
+          {!searching && results.length === 0 && (
+            <p className="px-3 py-2 text-xs text-muted">
+              Nenhum alimento encontrado.
+            </p>
+          )}
+          {results.map((food) => (
+            <button
+              type="button"
+              key={food.id}
+              onClick={() => {
+                onPick(food);
+                setQuery("");
+                setResults([]);
+              }}
+              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-foreground hover:bg-background"
+            >
+              <span className="truncate">{food.name}</span>
+              <span className="shrink-0 text-xs text-muted">
+                {food.kcal_per_100g} kcal/100g
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FoodChip({
+  food,
+  tone,
+  onRemove,
+}: {
+  food: Food;
+  tone: "include" | "exclude";
+  onRemove: () => void;
+}) {
+  const toneClass =
+    tone === "include"
+      ? "bg-on-target/15 text-on-target"
+      : "bg-off-target/15 text-off-target";
+  return (
+    <span
+      className={`flex max-w-full items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${toneClass}`}
+    >
+      <span className="truncate">{food.name}</span>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remover ${food.name} de ${
+          tone === "include" ? "incluir" : "evitar"
+        }`}
+        className="shrink-0 leading-none hover:opacity-70"
+      >
+        ×
+      </button>
+    </span>
+  );
+}
+
+function SuggestOptionPanel({
+  dayTypeId,
+  slot,
+  onCancel,
+  onSuggested,
+}: {
+  dayTypeId: string;
+  slot: number;
+  onCancel: () => void;
+  onSuggested: (meal: Meal) => void;
+}) {
+  const [target, setTarget] = useState<"include" | "exclude">("include");
+  const [include, setInclude] = useState<Food[]>([]);
+  const [exclude, setExclude] = useState<Food[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function pick(food: Food) {
+    if (target === "include") {
+      setExclude((prev) => prev.filter((f) => f.id !== food.id));
+      setInclude((prev) =>
+        prev.some((f) => f.id === food.id) ? prev : [...prev, food],
+      );
+    } else {
+      setInclude((prev) => prev.filter((f) => f.id !== food.id));
+      setExclude((prev) =>
+        prev.some((f) => f.id === food.id) ? prev : [...prev, food],
+      );
+    }
+  }
+
+  async function handleSuggest() {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/day-types/${dayTypeId}/slots/${slot}/suggest-option`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            include: include.map((f) => f.id),
+            exclude: exclude.map((f) => f.id),
+          }),
+        },
+      );
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "Falha ao sugerir opção");
+      onSuggested(body.meal as Meal);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Falha ao sugerir opção");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div
+      data-testid="suggest-panel"
+      className="flex flex-col gap-2.5 rounded-lg border border-dashed border-accent/40 bg-accent/5 p-3"
+    >
+      <div
+        role="group"
+        aria-label="Marcar alimento como incluir ou evitar"
+        className="flex rounded-lg border border-border bg-background p-0.5 text-xs font-medium"
+      >
+        <button
+          type="button"
+          onClick={() => setTarget("include")}
+          aria-pressed={target === "include"}
+          className={`flex-1 rounded-md px-2 py-1.5 transition-colors ${
+            target === "include"
+              ? "bg-on-target text-white"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Incluir
+        </button>
+        <button
+          type="button"
+          onClick={() => setTarget("exclude")}
+          aria-pressed={target === "exclude"}
+          className={`flex-1 rounded-md px-2 py-1.5 transition-colors ${
+            target === "exclude"
+              ? "bg-off-target text-white"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Evitar
+        </button>
+      </div>
+
+      <FoodSearchPicker
+        onPick={pick}
+        placeholder={
+          target === "include"
+            ? "Buscar alimento para incluir..."
+            : "Buscar alimento para evitar..."
+        }
+      />
+
+      {(include.length > 0 || exclude.length > 0) && (
+        <div className="flex flex-col gap-1.5">
+          {include.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {include.map((food) => (
+                <FoodChip
+                  key={food.id}
+                  food={food}
+                  tone="include"
+                  onRemove={() =>
+                    setInclude((prev) => prev.filter((f) => f.id !== food.id))
+                  }
+                />
+              ))}
+            </div>
+          )}
+          {exclude.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {exclude.map((food) => (
+                <FoodChip
+                  key={food.id}
+                  food={food}
+                  tone="exclude"
+                  onRemove={() =>
+                    setExclude((prev) => prev.filter((f) => f.id !== food.id))
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && <p className="text-xs text-off-target">{error}</p>}
+
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <button
+          type="button"
+          onClick={handleSuggest}
+          disabled={loading}
+          data-testid="suggest-run"
+          className="rounded-lg bg-accent py-2 text-sm font-medium text-white transition-opacity disabled:opacity-60 sm:flex-1"
+        >
+          {loading ? "Sugerindo..." : "Sugerir"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={loading}
+          className="rounded-lg border border-border bg-background py-2 text-sm font-medium text-foreground transition-opacity disabled:opacity-60 sm:flex-1"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function OptionsBar({
+  dayTypeId,
+  slot,
+  slotName,
+  options,
+  activeId,
+  onSelect,
+  onAddOption,
+  onOptionSuggested,
+}: {
+  dayTypeId: string;
+  slot: number;
+  slotName: string;
+  options: MealWithItems[];
+  activeId: string;
+  onSelect: (meal: MealWithItems) => void;
+  onAddOption: (
+    slot: number,
+    slotName: string,
+    optionCount: number,
+  ) => Promise<void>;
+  onOptionSuggested: (meal: Meal) => void;
+}) {
+  const hasOptions = options.length > 1;
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+
+  async function handleAdd() {
+    setAddError(null);
+    setAdding(true);
+    try {
+      await onAddOption(slot, slotName, options.length);
+    } catch (err) {
+      setAddError(err instanceof Error ? err.message : "Falha ao criar opção");
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {hasOptions && (
+        <OptionTabs options={options} activeId={activeId} onSelect={onSelect} />
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={adding}
+          data-testid="add-option"
+          className="rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-card disabled:opacity-60"
+        >
+          {adding ? "Criando..." : "+ Nova opção"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setSuggestOpen((v) => !v)}
+          aria-expanded={suggestOpen}
+          data-testid="suggest-option"
+          className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+            suggestOpen
+              ? "border-accent bg-accent text-white"
+              : "border-accent/30 bg-accent/10 text-accent hover:bg-accent/15"
+          }`}
+        >
+          ✨ Sugerir com IA
+        </button>
+      </div>
+      {addError && <p className="text-xs text-off-target">{addError}</p>}
+      {suggestOpen && (
+        <SuggestOptionPanel
+          dayTypeId={dayTypeId}
+          slot={slot}
+          onCancel={() => setSuggestOpen(false)}
+          onSuggested={(meal) => {
+            onOptionSuggested(meal);
+            setSuggestOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -392,6 +755,11 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
   const [newMealName, setNewMealName] = useState("");
   const [addingMeal, setAddingMeal] = useState(false);
   const [mealError, setMealError] = useState<string | null>(null);
+
+  // aba em foco por slot (edição), independente da opção "selected" (que
+  // conta pro total do dia) — permite abrir uma opção recém-criada sem
+  // alterar o que está valendo no total.
+  const [viewSlot, setViewSlot] = useState<Record<number, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -463,6 +831,10 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
     }
   }
 
+  function focusOption(meal: { id: string; slot: number }) {
+    setViewSlot((prev) => ({ ...prev, [meal.slot]: meal.id }));
+  }
+
   async function handleSelectOption(meal: MealWithItems) {
     if (meal.selected) return;
     const snapshot = meals;
@@ -473,6 +845,7 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
           : m,
       ),
     );
+    focusOption(meal);
     try {
       const res = await fetch(`/api/meals/${meal.id}`, {
         method: "PUT",
@@ -483,6 +856,44 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
     } catch (err) {
       setMeals(snapshot);
       setError(err instanceof Error ? err.message : "Falha ao selecionar opção");
+    }
+  }
+
+  async function handleAddOption(
+    slot: number,
+    slotName: string,
+    optionCount: number,
+  ) {
+    const res = await fetch("/api/meals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        day_type_id: dayType.id,
+        name: slotName,
+        slot,
+        order: slot,
+        option_label: `Opção ${optionCount + 1}`,
+        selected: false,
+      }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error ?? "Falha ao criar opção");
+    const meal = { ...(body as Meal), meal_items: [] } as MealWithItems;
+    setMeals((prev) => [...prev, meal]);
+    focusOption(meal);
+  }
+
+  async function handleOptionSuggested(meal: Meal) {
+    try {
+      const res = await fetch(`/api/meals?dayTypeId=${dayType.id}`);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "Falha ao recarregar refeições");
+      setMeals(body as MealWithItems[]);
+      focusOption(meal);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Falha ao recarregar refeições",
+      );
     }
   }
 
@@ -563,10 +974,11 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
         const sorted = [...options].sort((a, b) =>
           a.option_label.localeCompare(b.option_label),
         );
-        const active = sorted.find((o) => o.selected) ?? sorted[0];
+        const viewed = sorted.find((o) => o.id === viewSlot[slot]);
+        const active = viewed ?? sorted.find((o) => o.selected) ?? sorted[0];
         return { slot, options: sorted, active };
       });
-  }, [meals]);
+  }, [meals, viewSlot]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -678,9 +1090,16 @@ export default function DayEditor({ dayType }: { dayType: DayType }) {
                 </button>
               </div>
 
-              {hasOptions && (
-                <OptionTabs options={group.options} onSelect={handleSelectOption} />
-              )}
+              <OptionsBar
+                dayTypeId={dayType.id}
+                slot={group.slot}
+                slotName={meal.name}
+                options={group.options}
+                activeId={meal.id}
+                onSelect={handleSelectOption}
+                onAddOption={handleAddOption}
+                onOptionSuggested={handleOptionSuggested}
+              />
 
               <div className="flex flex-col gap-1.5">
                 {meal.meal_items.length === 0 && (
