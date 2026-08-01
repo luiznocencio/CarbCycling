@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { mealSubTargets, scaleOptionToTarget } from "@/lib/nutrition/solver";
 import { suggestMealOption, type PoolFood } from "@/lib/ai/menu";
+import { loadPreferences, applyAvoidToPool, resolveIncludeIds, prefsPromptSnippet } from "@/lib/ai/preferences";
 import basics from "@/../data/basics.json";
 import type { Food } from "@/lib/types";
 
@@ -53,9 +54,33 @@ export async function POST(
     return NextResponse.json({ error: "Sem alimentos no pool. Favorite alguns alimentos." }, { status: 400 });
   }
 
+  // Preferências: avoid filtra o pool (duro); always_include mescla no include; guidance orienta o prompt.
+  // O exclude do pedido VENCE (validateItems descarta os excluídos mesmo se um include tentar forçá-los).
+  const prefs = await loadPreferences(supabase);
+  const prefPool = applyAvoidToPool(pool, prefs.avoid);
+  if (prefPool.length === 0) {
+    return NextResponse.json(
+      { error: "Pool vazio após preferências — afrouxe os itens evitados ou favorite mais alimentos." },
+      { status: 400 },
+    );
+  }
+  const includeWithPrefs = [...new Set([...include, ...resolveIncludeIds(prefPool, prefs.always_include)])];
+  // poolMap usado depois para withFood/scaleOptionToTarget reflete SÓ o prefPool — item evitado nunca reaparece.
+  const prefMap = new Map<string, Food>();
+  for (const pf of prefPool) {
+    const f = poolMap.get(pf.id);
+    if (f) prefMap.set(pf.id, f);
+  }
+
   let rawItems;
   try {
-    rawItems = await suggestMealOption({ target: sub, pool, include, exclude });
+    rawItems = await suggestMealOption({
+      target: sub,
+      pool: prefPool,
+      include: includeWithPrefs,
+      exclude,
+      guidance: prefsPromptSnippet(prefs),
+    });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Falha ao sugerir opção" },
@@ -64,7 +89,7 @@ export async function POST(
   }
 
   const withFood = rawItems
-    .map((it) => ({ ...it, food: poolMap.get(it.food_id)! }))
+    .map((it) => ({ ...it, food: prefMap.get(it.food_id)! }))
     .filter((it) => it.food);
   const scaled = scaleOptionToTarget(withFood, { kcal: sub.kcal, protein_g: sub.protein_g });
 

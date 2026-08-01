@@ -3,6 +3,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { mealSubTargets, scaleOptionToTarget } from "@/lib/nutrition/solver";
 import { mealMacros } from "@/lib/nutrition/macros";
 import { generateMenu } from "@/lib/ai/menu";
+import { loadPreferences, applyAvoidToPool, prefsPromptSnippet } from "@/lib/ai/preferences";
 import basics from "@/../data/basics.json";
 import type { Food } from "@/lib/types";
 
@@ -34,13 +35,26 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Sem alimentos no pool. Favorite alguns alimentos." }, { status: 400 });
   }
 
+  // Preferências: avoid filtra o pool (duro); guidance orienta o prompt. Retrocompatível (EMPTY_PREFS → pool inteiro).
+  const prefs = await loadPreferences(supabase);
+  const filteredPool = applyAvoidToPool(pool, prefs.avoid);
+  if (filteredPool.length === 0) {
+    return NextResponse.json(
+      { error: "Pool vazio após preferências — afrouxe os itens evitados ou favorite mais alimentos." },
+      { status: 400 },
+    );
+  }
+  // poolMap usado no solver reflete SÓ o pool filtrado — evita reintroduzir um item evitado.
+  const filteredMap = new Map(filteredPool.map((f) => [f.id, f]));
+
   const subTargets = mealSubTargets(dayType, n);
   let raw;
   try {
     raw = await generateMenu({
       subTargets,
       options: m,
-      pool: pool.map((f) => ({
+      guidance: prefsPromptSnippet(prefs),
+      pool: filteredPool.map((f) => ({
         id: f.id, name: f.name,
         kcal_per_100g: f.kcal_per_100g, protein_per_100g: f.protein_per_100g,
         carbs_per_100g: f.carbs_per_100g, fat_per_100g: f.fat_per_100g,
@@ -59,7 +73,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const sub = subTargets[si] ?? subTargets[subTargets.length - 1];
     const options = slot.options.slice(0, m).map((opt, oi) => {
       const withFood = opt.items
-        .map((it) => ({ ...it, food: poolMap.get(it.food_id)! }))
+        .map((it) => ({ ...it, food: filteredMap.get(it.food_id)! }))
         .filter((it) => it.food);
       const scaled = scaleOptionToTarget(withFood, { kcal: sub.kcal, protein_g: sub.protein_g });
       return { label: `Opção ${oi + 1}`, items: scaled, macros: mealMacros(scaled) };
