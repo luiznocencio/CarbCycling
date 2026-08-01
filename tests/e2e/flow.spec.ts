@@ -155,8 +155,36 @@ test("fluxo principal: signup -> metas -> alimento -> cardápio -> dashboard", a
   await expect(page.getByTestId("option-tab")).toHaveCount(2);
   // Opção 1 (100 g de frango, 165 kcal/100g) selecionada por default
   await expect(page.getByTestId("day-total-kcal")).toHaveText("165");
-  // Troca para a Opção 2 (300 g = 495 kcal) → total muda
-  await page.getByTestId("option-tab").nth(1).click();
+  // Troca para a Opção 2 (300 g = 495 kcal): aguarda o PUT de seleção persistir, recarrega e confere
+  const [selResp] = await Promise.all([
+    page.waitForResponse(
+      (r) => /\/api\/meals\/[0-9a-f-]+$/.test(r.url()) && r.request().method() === "PUT",
+    ),
+    page.getByTestId("option-tab").nth(1).click(),
+  ]);
+  expect(selResp.ok()).toBeTruthy();
+  await page.goto(`/day/${dayTypeId}`);
+  await expect
+    .poll(async () =>
+      Number((await page.getByTestId("day-total-kcal").innerText()).replace(/\D/g, "")),
+    )
+    .toBe(495);
+
+  // 7. C2: cria uma 3ª opção MANUAL no slot e confirma que aparece como aba
+  const addOptRes = await page.request.post("/api/meals", {
+    data: {
+      day_type_id: dayTypeId,
+      name: "Teste",
+      slot: 0,
+      order: 0,
+      option_label: "Opção 3",
+      selected: false,
+    },
+  });
+  expect(addOptRes.ok()).toBeTruthy();
+  await page.goto(`/day/${dayTypeId}`);
+  await expect(page.getByTestId("option-tab")).toHaveCount(3);
+  // A Opção 2 segue selecionada → total do dia continua 495
   await expect
     .poll(async () =>
       Number((await page.getByTestId("day-total-kcal").innerText()).replace(/\D/g, "")),
