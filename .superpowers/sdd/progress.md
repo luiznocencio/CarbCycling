@@ -100,3 +100,4 @@ FEATURE C1 COMPLETE + LIVE (Tasks 1-8). Plan A/B/C1 done; C2 (manual meal substi
 === Feature C2 (substituições de refeição) — branch feature/meal-substitutions ===
 Plan: docs/superpowers/plans/2026-07-30-substituicoes-refeicao.md (no new migration)
 - Task 1 (kcal+protein solver): complete (commit f964319, review clean). scaleOptionToTarget (2-group linear + kcal fallback); C1 generator now uses it (protein no longer overshoots). 41 tests.
+- Task 2 (suggestMealOption + validateItems): complete (commit 3034dbf, review clean). Single-meal AI (gpt-4o-mini json_schema) + pure validateItems (drops out-of-pool/excluded, forces includes). 42 tests. key not leaked.
