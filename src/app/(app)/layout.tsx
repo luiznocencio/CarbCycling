@@ -30,6 +30,9 @@ export default async function AppLayout({
             <Link href="/foods" className="text-foreground hover:text-accent">
               Alimentos
             </Link>
+            <Link href="/preferences" className="text-foreground hover:text-accent">
+              Preferências
+            </Link>
             <Link href="/settings" className="text-foreground hover:text-accent">
               Configurações
             </Link>
