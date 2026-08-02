@@ -19,7 +19,7 @@ test("fluxo principal: signup -> metas -> alimento -> cardápio -> dashboard", a
   await page.getByRole("button", { name: "Cadastrar" }).click();
   await expect(page).toHaveURL("/", { timeout: 20_000 });
   await expect(
-    page.getByRole("heading", { name: "Semana" }),
+    page.getByRole("heading", { name: "Semana", exact: true }),
   ).toBeVisible({ timeout: 20_000 });
 
   // 2. Settings: perfil completo (basal real) + tipo de dia + padrão + recálculo semanal
@@ -206,4 +206,38 @@ test("fluxo principal: signup -> metas -> alimento -> cardápio -> dashboard", a
   const saved = await prefsRes.json();
   expect(saved.avoid).toContain("Peixe");
   expect(saved.likes).toContain("Ovo");
+
+  // 9. E2: aplicar semana (proposta fixa, sem IA) via /api/week/apply
+  const weekProposal = {
+    week: [
+      {
+        day_type_id: dayTypeId,
+        proposal: {
+          slots: [
+            {
+              name: "Café",
+              slot: 0,
+              options: [
+                { label: "Opção 1", items: [{ food_id: foodId, quantity: 100, unit: "g" }] },
+                { label: "Opção 2", items: [{ food_id: foodId, quantity: 200, unit: "g" }] },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+  };
+  const weekRes = await page.request.post("/api/week/apply", { data: weekProposal });
+  expect(weekRes.ok()).toBeTruthy();
+  const weekBody = await weekRes.json();
+  expect(weekBody.applied).toBe(1);
+  // week/apply substitui as refeições do tipo de dia: agora há 1 slot com 2 opções
+  await page.goto(`/day/${dayTypeId}`);
+  await expect(page.getByTestId("option-tab")).toHaveCount(2);
+  // Opção 1 (100 g de frango, 165 kcal/100g) selecionada por default → total 165
+  await expect
+    .poll(async () =>
+      Number((await page.getByTestId("day-total-kcal").innerText()).replace(/\D/g, "")),
+    )
+    .toBe(165);
 });
