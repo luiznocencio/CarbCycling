@@ -125,3 +125,8 @@ Final review (controller self-review): sem Crítico/Importante. Verificado: (1) 
 Minor (não bloqueia): applyAvoidToPool usa substring — termo curto pode superfiltrar (documentado no spec; aceitável single-user). PreferencesEditor.tsx cresce; ok.
 MERGED to main (ff, 1e67a29..46a17bf) + pushed; Vercel redeployado. Sem segredo no diff. Branch feat/e1-preferencias deletado (local; nunca foi pushado).
 PROD SMOKE (OpenAI real): usuário de teste @example.com → favoritou ovo+frango+arroz+aveia+banana; day_type 2000/150. PUT prefs avoid=["ovo"], likes=["frango"]. generate(4 refs,2 opções): 4 slots, alimentos = frango/arroz/brócolis/leite/pão/feijão/macarrão/banana/carne/atum — ZERO com "ovo" (filtro duro OK apesar de ovo favoritado). Chat: "alérgico a amendoim, amo batata doce, não curto fígado" → acumulou sobre o atual: avoid=[ovo,amendoim], likes=[frango,batata doce], dislikes=[figado] — allergy→avoid exatamente como projetado; e NÃO persistiu (GET seguiu avoid=[ovo]). Página /preferences renderiza (nav+form+chat+chip ovo). Usuários @example.com limpos (0 restantes; gmail real intacto). FEATURE E1 LIVE.
+
+=== Feature E2 (cardápio da semana por IA) — branch feat/e2-cardapio-semana ===
+Spec: docs/superpowers/specs/2026-08-02-cardapio-semana-design.md
+Plan: docs/superpowers/plans/2026-08-02-cardapio-semana.md
+NOTE: sem migração, sem env novo. Refactor DRY primeiro (extrair núcleo de generate→generateProposalForDayType e apply-menu→applyProposalToDayType; rotas viram wrappers finos, contrato inalterado — E2E bloco 6 = rede de segurança). Reusa por tipo de dia distinto; 2 opções; revisar/aplicar. Prefs (E1) de graça.
