@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { recordWeight } from "@/lib/nutrition/weight-record";
 
 export async function GET() {
   const supabase = await createServerSupabase();
@@ -29,6 +30,14 @@ export async function PUT(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const b = await req.json();
+
+  // Preserva kcal_adjustment: lê o valor atual do banco para não zerá-lo no upsert.
+  const { data: current } = await supabase
+    .from("profiles")
+    .select("kcal_adjustment")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
   const { data, error } = await supabase
     .from("profiles")
     .upsert({
@@ -43,9 +52,31 @@ export async function PUT(req: Request) {
       bmr_formula: b.bmr_formula ?? "auto",
       intensity: b.intensity ?? "moderate",
       safety_guardrails: b.safety_guardrails ?? true,
+      kcal_adjustment: b.kcal_adjustment ?? current?.kcal_adjustment ?? 0,
     })
     .select()
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // Se o peso é válido, registra no histórico (weight_logs = verdade) e sincroniza
+  // profiles.weight_kg com o log mais recente. Roda DEPOIS do upsert para que o
+  // upsert não deixe um valor antigo — recordWeight sempre reescreve para o último log.
+  const weight = Number(b.weight_kg);
+  if (Number.isFinite(weight) && weight > 0 && weight < 500) {
+    await recordWeight(
+      supabase,
+      user.id,
+      weight,
+      new Date().toISOString().slice(0, 10),
+      "",
+    );
+    const { data: refreshed } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (refreshed) return NextResponse.json(refreshed);
+  }
+
   return NextResponse.json(data);
 }
