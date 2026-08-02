@@ -205,6 +205,7 @@ export default function ProfileForm() {
       bmr_formula: form.bmr_formula,
       intensity: form.intensity,
       safety_guardrails: form.safety_guardrails,
+      kcal_adjustment: profile.kcal_adjustment ?? 0,
     };
 
     setSaving(true);
