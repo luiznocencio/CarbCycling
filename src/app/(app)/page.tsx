@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { mealMacros, sumMacros, compareToTarget } from "@/lib/nutrition/macros";
 import WeekGrid, { type DayCard } from "@/components/WeekGrid";
+import WeekMenuGenerator from "@/components/WeekMenuGenerator";
 import type { DayType, Food, WeeklyPatternEntry } from "@/lib/types";
 
 const WEEKDAYS = [
@@ -62,6 +63,7 @@ export default async function DashboardPage() {
   return (
     <main>
       <h1 className="mb-3 text-lg font-semibold text-foreground">Semana</h1>
+      <WeekMenuGenerator />
       <WeekGrid cards={cards} />
     </main>
   );
