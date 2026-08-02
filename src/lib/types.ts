@@ -75,4 +75,14 @@ export interface Profile {
   bmr_formula: BmrFormula;
   intensity: Intensity;
   safety_guardrails: boolean;
+  kcal_adjustment: number;
+}
+
+export interface WeightLog {
+  id: string;
+  user_id: string;
+  logged_on: string;
+  weight_kg: number;
+  note: string;
+  created_at: string;
 }

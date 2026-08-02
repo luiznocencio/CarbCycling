@@ -19,6 +19,7 @@ export async function GET() {
       bmr_formula: "auto",
       intensity: "moderate",
       safety_guardrails: true,
+      kcal_adjustment: 0,
     },
   );
 }
