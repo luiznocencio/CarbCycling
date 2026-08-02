@@ -27,6 +27,9 @@ export default async function AppLayout({
             <Link href="/" className="text-foreground hover:text-accent">
               Semana
             </Link>
+            <Link href="/weight" className="text-foreground hover:text-accent">
+              Progresso
+            </Link>
             <Link href="/foods" className="text-foreground hover:text-accent">
               Alimentos
             </Link>
