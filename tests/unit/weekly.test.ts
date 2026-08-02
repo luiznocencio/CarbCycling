@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { weeklyKcalByLevel, levelTargets, distributeWeeklyTargets } from "@/lib/nutrition/weekly";
+import { weeklyKcalByLevel, levelTargets, distributeWeeklyTargets, goalAdjustment } from "@/lib/nutrition/weekly";
 
 describe("weeklyKcalByLevel", () => {
   it("média ponderada = avgDaily e ciclo monotônico", () => {
@@ -60,5 +60,14 @@ describe("distributeWeeklyTargets", () => {
     expect(res.perLevel.low.target_carbs_g).toBe(80);
     expect(res.perLevel.high.target_carbs_g).toBe(320);
     expect(res.perLevel.high.target_kcal).toBeGreaterThan(res.perLevel.low.target_kcal);
+  });
+  it("kcalAdjustment desloca o avgDailyTarget", () => {
+    const base = distributeWeeklyTargets({ tdee: 2500, weightKg: 80, goal: "maintenance", intensity: "moderate", guardrails: false, bmr: 1700, levelCounts: { low: 1, medium: 1, high: 1 } });
+    const adj = distributeWeeklyTargets({ tdee: 2500, weightKg: 80, goal: "maintenance", intensity: "moderate", guardrails: false, bmr: 1700, levelCounts: { low: 1, medium: 1, high: 1 }, kcalAdjustment: -300 });
+    expect(adj.summary.avgDailyTarget).toBe(base.summary.avgDailyTarget - 300);
+  });
+  it("goalAdjustment expõe o ajuste do plano", () => {
+    expect(goalAdjustment("fat_loss", "moderate")).toBe(-0.2);
+    expect(goalAdjustment("maintenance", "light")).toBe(0);
   });
 });

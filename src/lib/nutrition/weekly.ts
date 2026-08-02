@@ -16,6 +16,10 @@ const AMPLITUDE: Record<Intensity, Record<CarbLevel, number>> = {
   aggressive: { low: 0.78, medium: 1.0, high: 1.22 },
 };
 
+export function goalAdjustment(goal: Goal, intensity: Intensity): number {
+  return GOAL_ADJ[goal][intensity];
+}
+
 export function weeklyKcalByLevel(
   avgDaily: number,
   r: Record<CarbLevel, number>,
@@ -79,9 +83,10 @@ export function distributeWeeklyTargets(input: {
   guardrails: boolean;
   bmr: number;
   levelCounts: Record<CarbLevel, number>;
+  kcalAdjustment?: number;
 }) {
   const adj = GOAL_ADJ[input.goal][input.intensity];
-  const avgDailyTarget = Math.round(input.tdee * (1 + adj));
+  const avgDailyTarget = Math.round(input.tdee * (1 + adj)) + (input.kcalAdjustment ?? 0);
   const r = AMPLITUDE[input.intensity];
   const kcalByLevel = weeklyKcalByLevel(avgDailyTarget, r, input.levelCounts);
 
