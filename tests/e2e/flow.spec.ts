@@ -240,4 +240,28 @@ test("fluxo principal: signup -> metas -> alimento -> cardápio -> dashboard", a
       Number((await page.getByTestId("day-total-kcal").innerText()).replace(/\D/g, "")),
     )
     .toBe(165);
+
+  // 10. D: registrar peso (histórico) + apply-adjustment (sem IA)
+  // Registro antigo (histórico) + registro de hoje (vira o mais recente → espelha em profiles.weight_kg).
+  await page.request.post("/api/weight", {
+    data: { weight_kg: 82, logged_on: "2020-01-01" },
+  });
+  const wRes = await page.request.post("/api/weight", { data: { weight_kg: 79.6 } });
+  expect(wRes.ok()).toBeTruthy();
+  const hist = await (await page.request.get("/api/weight")).json();
+  expect(hist.length).toBeGreaterThanOrEqual(2);
+  // profiles.weight_kg reflete o registro mais recente (hoje = 79.6)
+  const prof = await (await page.request.get("/api/profile")).json();
+  expect(Number(prof.weight_kg)).toBe(79.6);
+  // apply-adjustment com delta fixo altera o kcal_adjustment acumulado
+  const adj = await page.request.post("/api/weight/apply-adjustment", {
+    data: { delta: -150 },
+  });
+  expect(adj.ok()).toBeTruthy();
+  const adjBody = await adj.json();
+  expect(adjBody.kcal_adjustment).toBe(-150);
+  // A página /weight carrega com formulário e histórico
+  await page.goto("/weight");
+  await expect(page.getByTestId("weight-form")).toBeVisible();
+  await expect(page.getByTestId("weight-history")).toBeVisible();
 });
