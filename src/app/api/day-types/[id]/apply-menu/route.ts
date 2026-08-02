@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
-
-type ProposalItem = { food_id: string; quantity: number; unit: "g" | "unit" };
-type Proposal = {
-  slots: { name: string; slot: number; options: { label: string; items: ProposalItem[] }[] }[];
-};
+import { applyProposalToDayType, type Proposal } from "@/lib/nutrition/apply";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -12,38 +8,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { proposal } = (await req.json()) as { proposal: Proposal };
-  if (!proposal || !Array.isArray(proposal.slots)) {
-    return NextResponse.json({ error: "proposta inválida" }, { status: 400 });
-  }
-
-  // Confere a posse do tipo de dia sob RLS → 404 consistente com o generate.
-  // (A RLS de `meals` já impede dano cross-tenant; isto evita ok:true para day_type alheio.)
-  const { data: dayType } = await supabase.from("day_types").select("id").eq("id", id).maybeSingle();
-  if (!dayType) return NextResponse.json({ error: "tipo de dia não encontrado" }, { status: 404 });
-
-  // Substitui: apaga as refeições atuais do tipo de dia (cascade em meal_items)
-  const { error: delErr } = await supabase.from("meals").delete().eq("day_type_id", id);
-  if (delErr) return NextResponse.json({ error: delErr.message }, { status: 400 });
-
-  for (const slot of proposal.slots) {
-    for (let oi = 0; oi < slot.options.length; oi++) {
-      const opt = slot.options[oi];
-      const { data: meal, error: mErr } = await supabase
-        .from("meals")
-        .insert({
-          user_id: user.id, day_type_id: id, name: slot.name,
-          order: slot.slot, slot: slot.slot, option_label: opt.label, selected: oi === 0,
-        })
-        .select().single();
-      if (mErr) return NextResponse.json({ error: mErr.message }, { status: 400 });
-      if (opt.items.length) {
-        const rows = opt.items.map((it) => ({
-          meal_id: meal.id, food_id: it.food_id, quantity: it.quantity, unit: it.unit,
-        }));
-        const { error: iErr } = await supabase.from("meal_items").insert(rows);
-        if (iErr) return NextResponse.json({ error: iErr.message }, { status: 400 });
-      }
-    }
-  }
+  const res = await applyProposalToDayType(supabase, user.id, id, proposal);
+  if (!res.ok) return NextResponse.json({ error: res.error }, { status: res.status });
   return NextResponse.json({ ok: true });
 }
