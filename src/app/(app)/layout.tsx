@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { SignOutButton } from "@/components/SignOutButton";
+import AppNav from "@/components/AppNav";
 
 export default async function AppLayout({
   children,
@@ -16,36 +15,10 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-10 border-b border-border bg-card">
-        <nav className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
-          <Link href="/" className="flex shrink-0 items-center gap-1.5" aria-label="Início">
-            <span className="size-2 rounded-full bg-carb-low" />
-            <span className="size-2 rounded-full bg-carb-medium" />
-            <span className="size-2 rounded-full bg-carb-high" />
-          </Link>
-          <div className="flex min-w-0 items-center gap-4 overflow-x-auto whitespace-nowrap text-sm">
-            <Link href="/" className="text-foreground hover:text-accent">
-              Semana
-            </Link>
-            <Link href="/weight" className="text-foreground hover:text-accent">
-              Progresso
-            </Link>
-            <Link href="/foods" className="text-foreground hover:text-accent">
-              Alimentos
-            </Link>
-            <Link href="/preferences" className="text-foreground hover:text-accent">
-              Preferências
-            </Link>
-            <Link href="/settings" className="text-foreground hover:text-accent">
-              Configurações
-            </Link>
-          </div>
-          <div className="shrink-0">
-            <SignOutButton />
-          </div>
-        </nav>
-      </header>
-      <div className="mx-auto max-w-3xl px-4 py-6">{children}</div>
+      <AppNav />
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:pb-8">
+        {children}
+      </div>
     </div>
   );
 }

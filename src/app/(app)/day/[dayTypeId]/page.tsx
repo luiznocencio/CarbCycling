@@ -19,7 +19,7 @@ export default async function DayPage({
   if (!dayType) notFound();
 
   return (
-    <main className="flex flex-col gap-4">
+    <main className="mx-auto flex max-w-3xl flex-col gap-4">
       <h1 className="text-lg font-semibold text-foreground">{dayType.name}</h1>
       <MenuGenerator dayType={dayType as DayType} />
       <DayEditor dayType={dayType as DayType} />

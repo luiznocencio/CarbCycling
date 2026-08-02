@@ -4,7 +4,7 @@ import WeeklyPatternSettings from "@/components/WeeklyPatternSettings";
 
 export default function SettingsPage() {
   return (
-    <main className="space-y-8">
+    <main className="mx-auto max-w-3xl space-y-8">
       <section>
         <h1 className="mb-3 text-lg font-semibold">Perfil</h1>
         <ProfileForm />

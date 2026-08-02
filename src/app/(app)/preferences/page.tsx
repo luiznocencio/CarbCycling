@@ -2,7 +2,7 @@ import PreferencesEditor from "@/components/PreferencesEditor";
 
 export default function PreferencesPage() {
   return (
-    <main className="space-y-3">
+    <main className="mx-auto max-w-3xl space-y-3">
       <div>
         <h1 className="text-lg font-semibold">Preferências</h1>
         <p className="text-sm text-muted">

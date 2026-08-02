@@ -64,6 +64,7 @@ function CardBody({ card }: { card: DayCard }) {
 
   const offTarget = isOffTarget(diff);
   const levelStyle = CARB_LEVEL_STYLES[dayType.carb_level];
+  const kcal = Math.round(planned.kcal);
   const percent = dayType.target_kcal > 0
     ? Math.min(100, Math.max(0, (planned.kcal / dayType.target_kcal) * 100))
     : planned.kcal > 0
@@ -71,20 +72,10 @@ function CardBody({ card }: { card: DayCard }) {
       : 0;
 
   return (
-    <div className="flex h-full flex-col gap-3">
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-sm font-semibold text-foreground">
-          {card.label}
-        </span>
-        {offTarget && (
-          <span
-            data-testid="off-target"
-            className="shrink-0 rounded-full bg-off-target/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-off-target"
-          >
-            Fora da meta
-          </span>
-        )}
-      </div>
+    <div className="flex h-full flex-col gap-2.5">
+      <span className="text-sm font-semibold text-foreground">
+        {card.label}
+      </span>
 
       <span
         className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${levelStyle.chipBg} ${levelStyle.chipText}`}
@@ -93,16 +84,15 @@ function CardBody({ card }: { card: DayCard }) {
         {dayType.name}
       </span>
 
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-baseline justify-between text-xs text-muted">
-          <span>Calorias</span>
-          <span>
-            <span className="font-semibold text-foreground">
-              {planned.kcal}
-            </span>{" "}
+      <div className="mt-0.5 flex flex-col gap-1.5">
+        <p className="flex items-baseline gap-1">
+          <span className="text-base font-semibold tabular-nums text-foreground">
+            {kcal}
+          </span>
+          <span className="text-xs text-muted">
             / {dayType.target_kcal} kcal
           </span>
-        </div>
+        </p>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
           <div
             className={`h-full rounded-full ${
@@ -113,9 +103,19 @@ function CardBody({ card }: { card: DayCard }) {
         </div>
       </div>
 
-      <p className="text-xs text-muted">
-        P {planned.protein_g}g · C {planned.carbs_g}g · G {planned.fat_g}g
+      <p className="text-xs tabular-nums text-muted">
+        P {Math.round(planned.protein_g)} · C {Math.round(planned.carbs_g)} · G{" "}
+        {Math.round(planned.fat_g)} <span className="opacity-70">g</span>
       </p>
+
+      {offTarget && (
+        <span
+          data-testid="off-target"
+          className="mt-auto text-[11px] font-medium text-off-target"
+        >
+          Fora da meta
+        </span>
+      )}
     </div>
   );
 }
