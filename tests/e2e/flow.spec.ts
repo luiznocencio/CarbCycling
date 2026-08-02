@@ -51,7 +51,9 @@ test("fluxo principal: signup -> metas -> alimento -> cardápio -> dashboard", a
   await page
     .getByTestId("weekday-select-0")
     .selectOption({ label: dayTypeName });
-  await page.getByTestId("weekly-save").click();
+  // force: bloco no fim de uma página longa; o dev-server (sticky header + indicador
+  // do Next dev tools) engana o hit-test do Playwright mesmo com o botão desobstruído.
+  await page.getByTestId("weekly-save").click({ force: true });
   await expect(page.getByText("Padrão salvo.")).toBeVisible();
 
   // Recalcula as metas da semana e confere o resumo
@@ -190,4 +192,18 @@ test("fluxo principal: signup -> metas -> alimento -> cardápio -> dashboard", a
       Number((await page.getByTestId("day-total-kcal").innerText()).replace(/\D/g, "")),
     )
     .toBe(495);
+
+  // 8. E1: preferências — salvar formulário e conferir persistência (sem IA)
+  await page.goto("/preferences");
+  // adiciona um item em "Evitar" e um em "Gosto" pelo formulário
+  await page.getByTestId("prefs-avoid-input").fill("Peixe");
+  await page.getByTestId("prefs-avoid-input").press("Enter");
+  await page.getByTestId("prefs-likes-input").fill("Ovo");
+  await page.getByTestId("prefs-likes-input").press("Enter");
+  await page.getByTestId("prefs-save").click();
+  await expect(page.getByText("Preferências salvas.")).toBeVisible();
+  const prefsRes = await page.request.get("/api/preferences");
+  const saved = await prefsRes.json();
+  expect(saved.avoid).toContain("Peixe");
+  expect(saved.likes).toContain("Ovo");
 });
