@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { classifyFood } from "@/lib/nutrition/coherence";
+import { classifyFood, mealTypeFromName } from "@/lib/nutrition/coherence";
 
 const f = (name: string, p = 0, c = 0, g = 0) => ({
   name, protein_per_100g: p, carbs_per_100g: c, fat_per_100g: g,
@@ -32,5 +32,19 @@ describe("classifyFood", () => {
     expect(classifyFood(f("XYZ desconhecido", 2, 50, 1))).toBe("carbo");
     expect(classifyFood(f("XYZ desconhecido", 1, 1, 60))).toBe("gordura");
     expect(classifyFood(f("XYZ desconhecido", 1, 2, 1))).toBe("outro");
+  });
+});
+
+describe("mealTypeFromName", () => {
+  it("por nome", () => {
+    expect(mealTypeFromName("Café da manhã", 0, 5)).toBe("cafe");
+    expect(mealTypeFromName("Almoço", 2, 5)).toBe("principal");
+    expect(mealTypeFromName("Jantar", 4, 5)).toBe("principal");
+    expect(mealTypeFromName("Lanche/pré-treino", 1, 5)).toBe("lanche");
+    expect(mealTypeFromName("Ceia", 5, 6)).toBe("lanche");
+  });
+  it("fallback por posição (nomes genéricos)", () => {
+    expect(mealTypeFromName("Refeição 1", 0, 4)).toBe("cafe");
+    expect(mealTypeFromName("Refeição 3", 2, 4)).toBe("principal");
   });
 });

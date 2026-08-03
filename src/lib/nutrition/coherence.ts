@@ -45,3 +45,15 @@ export function classifyFood(food: {
   if (g >= 50) return "gordura";
   return "outro";
 }
+
+export type MealType = "cafe" | "lanche" | "principal";
+
+export function mealTypeFromName(name: string, index: number, _total: number): MealType {
+  const n = norm(name);
+  if (n.includes("cafe") || n.includes("manha")) return "cafe";
+  if (n.includes("lanche") || n.includes("pre-treino") || n.includes("pos-treino") || n.includes("ceia"))
+    return "lanche";
+  if (n.includes("almoco") || n.includes("jantar")) return "principal";
+  // fallback por posição: primeira = café; demais = principal
+  return index === 0 ? "cafe" : "principal";
+}
