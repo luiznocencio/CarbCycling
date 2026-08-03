@@ -77,3 +77,35 @@ export function coherenceGuidance(mealType: MealType): string {
       return "Almoço/Jantar: 1 proteína animal + 1 carboidrato + feijão opcional + um vegetal/salada + gordura boa opcional (azeite).";
   }
 }
+
+// Categorias limitadas a 1 por refeição e critério de "melhor" (qual manter).
+export function enforceCoherence<T>(
+  items: T[],
+  info: (it: T) => { category: FoodCategory; protein_g: number; carbs_g: number },
+): T[] {
+  const meta = items.map((it) => ({ it, ...info(it) }));
+
+  // grupo carbo-base = carbo + pao; critério: maior carbs_g
+  const isCarbBase = (c: FoodCategory) => c === "carbo" || c === "pao";
+
+  const keptProtein = bestIndex(meta, (m) => m.category === "proteina_animal", (m) => m.protein_g);
+  const keptCarb = bestIndex(meta, (m) => isCarbBase(m.category), (m) => m.carbs_g);
+
+  return meta
+    .filter((m, i) => {
+      if (m.category === "proteina_animal") return i === keptProtein;
+      if (isCarbBase(m.category)) return i === keptCarb;
+      return true; // complementos: leguminosa, vegetal, fruta, laticinio, ovo, gordura, oleaginosa, outro
+    })
+    .map((m) => m.it);
+}
+
+function bestIndex<T>(
+  meta: T[], match: (m: T) => boolean, score: (m: T) => number,
+): number {
+  let best = -1, bestScore = -Infinity;
+  meta.forEach((m, i) => {
+    if (match(m) && score(m) > bestScore) { best = i; bestScore = score(m); }
+  });
+  return best;
+}

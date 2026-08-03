@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { classifyFood, mealTypeFromName, coherenceGuidance, coherenceRulesGeneral } from "@/lib/nutrition/coherence";
+import { classifyFood, mealTypeFromName, coherenceGuidance, coherenceRulesGeneral, enforceCoherence } from "@/lib/nutrition/coherence";
+import type { FoodCategory } from "@/lib/nutrition/coherence";
 
 const f = (name: string, p = 0, c = 0, g = 0) => ({
   name, protein_per_100g: p, carbs_per_100g: c, fat_per_100g: g,
@@ -59,5 +60,53 @@ describe("coherenceGuidance", () => {
     expect(coherenceGuidance("cafe")).toMatch(/café da manhã/i);
     expect(coherenceGuidance("principal")).toMatch(/vegetal|salada/i);
     expect(coherenceGuidance("lanche")).toMatch(/leve/i);
+  });
+});
+
+type I = { id: string; cat: FoodCategory; p: number; c: number };
+const run = (items: I[]) =>
+  enforceCoherence(items, (it) => ({ category: it.cat, protein_g: it.p, carbs_g: it.c })).map((x) => x.id);
+
+describe("enforceCoherence", () => {
+  it("frango+carne → mantém só a proteína de maior proteína", () => {
+    const r = run([
+      { id: "frango", cat: "proteina_animal", p: 30, c: 0 },
+      { id: "carne", cat: "proteina_animal", p: 45, c: 0 },
+      { id: "arroz", cat: "carbo", p: 3, c: 40 },
+      { id: "salada", cat: "vegetal", p: 1, c: 3 },
+    ]);
+    expect(r).toEqual(["carne", "arroz", "salada"]);
+  });
+  it("arroz+macarrão+batata → 1 carbo (o de maior carbo)", () => {
+    const r = run([
+      { id: "arroz", cat: "carbo", p: 3, c: 40 },
+      { id: "macarrao", cat: "carbo", p: 8, c: 60 },
+      { id: "batata", cat: "carbo", p: 1, c: 20 },
+    ]);
+    expect(r).toEqual(["macarrao"]);
+  });
+  it("arroz+feijão+carne+brócolis → intacto", () => {
+    const r = run([
+      { id: "carne", cat: "proteina_animal", p: 40, c: 0 },
+      { id: "arroz", cat: "carbo", p: 3, c: 40 },
+      { id: "feijao", cat: "leguminosa", p: 5, c: 14 },
+      { id: "brocolis", cat: "vegetal", p: 3, c: 4 },
+    ]);
+    expect(r).toEqual(["carne", "arroz", "feijao", "brocolis"]);
+  });
+  it("pão conta como carbo-base junto de aveia → mantém 1", () => {
+    const r = run([
+      { id: "aveia", cat: "carbo", p: 14, c: 66 },
+      { id: "pao", cat: "pao", p: 9, c: 49 },
+    ]);
+    expect(r).toEqual(["aveia"]);
+  });
+  it("só proteínas → mantém 1", () => {
+    const r = run([
+      { id: "frango", cat: "proteina_animal", p: 30, c: 0 },
+      { id: "ovo", cat: "ovo", p: 13, c: 1 },
+    ]);
+    // ovo é complemento (não é proteina_animal) → mantém ambos
+    expect(r).toEqual(["frango", "ovo"]);
   });
 });
