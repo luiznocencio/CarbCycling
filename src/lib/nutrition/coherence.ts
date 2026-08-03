@@ -1,0 +1,47 @@
+export type FoodCategory =
+  | "proteina_animal" | "ovo" | "leguminosa" | "laticinio"
+  | "carbo" | "pao" | "vegetal" | "fruta" | "gordura" | "oleaginosa" | "outro";
+
+const norm = (s: string) =>
+  s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+// ordem = prioridade. Cada regra: se algum termo aparece no nome normalizado.
+const KEYWORDS: [FoodCategory, string[]][] = [
+  ["ovo", ["ovo", "ovos", "clara", "gema"]],
+  ["leguminosa", ["feijao", "lentilha", "grao-de-bico", "grao de bico", "ervilha", "soja", "edamame", "tremoco", "vagem"]],
+  ["oleaginosa", ["castanha", "amendoim", "noz", "nozes", "amendoa", "pistache", "macadamia", "avela"]],
+  ["laticinio", ["leite", "iogurte", "queijo", "requeijao", "coalhada", "ricota", "whey"]],
+  ["proteina_animal", [
+    "frango", "peito", "carne", "bovina", "patinho", "boi", "acem", "musculo",
+    "peixe", "tilapia", "salmao", "atum", "sardinha", "merluza", "pescada",
+    "porco", "suina", "lombo", "pernil", "peru", "file", "filé", "coxa", "sobrecoxa", "camarao",
+  ]],
+  ["gordura", ["azeite", "oleo", "manteiga", "margarina", "banha"]],
+  ["pao", ["pao", "torrada", "biscoito", "bolacha"]],
+  ["carbo", [
+    "arroz", "batata", "mandioca", "aipim", "macaxeira", "inhame", "cara",
+    "macarrao", "massa", "cuscuz", "aveia", "tapioca", "polenta", "fuba",
+    "quinoa", "milho", "pure",
+  ]],
+  ["fruta", ["banana", "maca", "mamao", "laranja", "morango", "abacaxi", "uva", "manga", "melancia", "pera", "kiwi", "melao", "goiaba", "ameixa", "abacate"]],
+  ["vegetal", [
+    "brocolis", "tomate", "alface", "couve", "cenoura", "abobrinha", "espinafre",
+    "pepino", "pimentao", "cebola", "alho", "chuchu", "beterraba", "repolho",
+    "rucula", "acelga", "abobora", "quiabo", "berinjela", "aspargo",
+  ]],
+];
+
+export function classifyFood(food: {
+  name: string; protein_per_100g: number; carbs_per_100g: number; fat_per_100g: number;
+}): FoodCategory {
+  const n = norm(food.name);
+  for (const [cat, terms] of KEYWORDS) {
+    if (terms.some((t) => n.includes(t))) return cat;
+  }
+  // fallback por macro
+  const { protein_per_100g: p, carbs_per_100g: c, fat_per_100g: g } = food;
+  if (p >= 15 && c < 15) return "proteina_animal";
+  if (c >= 40) return "carbo";
+  if (g >= 50) return "gordura";
+  return "outro";
+}
