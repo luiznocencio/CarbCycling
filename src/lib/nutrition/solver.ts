@@ -3,17 +3,25 @@ import { mealMacros, itemMacros } from "@/lib/nutrition/macros";
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-const DEFAULT_5_NAMES = [
-  "Café da manhã", "Lanche/pré-treino", "Almoço", "Lanche/pré-treino", "Jantar",
-];
-const DEFAULT_5_WEIGHTS = [0.2, 0.1, 0.3, 0.15, 0.25];
+const NAMES_BY_N: Record<number, string[]> = {
+  3: ["Café da manhã", "Almoço", "Jantar"],
+  4: ["Café da manhã", "Almoço", "Lanche", "Jantar"],
+  5: ["Café da manhã", "Lanche/pré-treino", "Almoço", "Lanche/pré-treino", "Jantar"],
+  6: ["Café da manhã", "Lanche", "Almoço", "Lanche", "Jantar", "Ceia"],
+};
+const WEIGHTS_BY_N: Record<number, number[]> = {
+  3: [0.25, 0.4, 0.35],
+  4: [0.25, 0.35, 0.1, 0.3],
+  5: [0.2, 0.1, 0.3, 0.15, 0.25],
+  6: [0.2, 0.1, 0.28, 0.1, 0.22, 0.1],
+};
 
 export function mealSubTargets(
   dayTarget: { target_kcal: number; target_protein_g: number; target_carbs_g: number; target_fat_g: number },
   n: number,
 ) {
-  const names = n === 5 ? DEFAULT_5_NAMES : Array.from({ length: n }, (_, i) => `Refeição ${i + 1}`);
-  const weights = n === 5 ? DEFAULT_5_WEIGHTS : Array.from({ length: n }, () => 1 / n);
+  const names = NAMES_BY_N[n] ?? Array.from({ length: n }, (_, i) => `Refeição ${i + 1}`);
+  const weights = WEIGHTS_BY_N[n] ?? Array.from({ length: n }, () => 1 / n);
   return names.map((name, i) => ({
     name,
     kcal: round1(dayTarget.target_kcal * weights[i]),

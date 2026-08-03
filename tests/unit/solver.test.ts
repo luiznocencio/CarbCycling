@@ -28,8 +28,21 @@ describe("mealSubTargets", () => {
   });
   it("N=3 split uniforme com nomes genéricos", () => {
     const r = mealSubTargets(day, 3);
-    expect(r.map((m) => m.name)).toEqual(["Refeição 1", "Refeição 2", "Refeição 3"]);
-    expect(r[0].kcal).toBeCloseTo(2000 / 3, 1);
+    expect(r.map((m) => m.name)).toEqual(["Café da manhã", "Almoço", "Jantar"]);
+    expect(r.reduce((s, m) => s + m.kcal, 0)).toBe(2000);
+  });
+  it("N sem tabela (7) usa split uniforme com nomes genéricos", () => {
+    const r = mealSubTargets(day, 7);
+    expect(r.map((m) => m.name)).toEqual([
+      "Refeição 1", "Refeição 2", "Refeição 3", "Refeição 4", "Refeição 5", "Refeição 6", "Refeição 7",
+    ]);
+    expect(r[0].kcal).toBeCloseTo(2000 / 7, 1);
+  });
+  it("nomes default por refeição comum (n=3,4,6)", () => {
+    const dt = { target_kcal: 2000, target_protein_g: 150, target_carbs_g: 200, target_fat_g: 60 };
+    expect(mealSubTargets(dt, 3).map((m) => m.name)).toEqual(["Café da manhã", "Almoço", "Jantar"]);
+    expect(mealSubTargets(dt, 4).map((m) => m.name)).toEqual(["Café da manhã", "Almoço", "Lanche", "Jantar"]);
+    expect(mealSubTargets(dt, 6).map((m) => m.name)).toEqual(["Café da manhã", "Lanche", "Almoço", "Lanche", "Jantar", "Ceia"]);
   });
 });
 
