@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { mealSubTargets, scaleOptionToTarget } from "@/lib/nutrition/solver";
 import { suggestMealOption, type PoolFood } from "@/lib/ai/menu";
+import { classifyFood, mealTypeFromName, enforceCoherence } from "@/lib/nutrition/coherence";
+import { itemGrams } from "@/lib/nutrition/macros";
 import { loadPreferences, applyAvoidToPool, resolveIncludeIds, prefsPromptSnippet } from "@/lib/ai/preferences";
 import basics from "@/../data/basics.json";
 import type { Food } from "@/lib/types";
@@ -32,6 +34,7 @@ export async function POST(
   const sub = subTargets[idx] ?? subTargets[subTargets.length - 1];
   const slotName = (dayMeals ?? []).find((m) => m.slot === slotNum)?.name ?? sub.name;
   const optionCount = (dayMeals ?? []).filter((m) => m.slot === slotNum).length;
+  const mealType = mealTypeFromName(slotName, idx, n);
 
   // pool = favoritos ∪ básicos ∪ include
   const { data: favRows } = await supabase.from("food_favorites").select("food_id");
@@ -80,6 +83,7 @@ export async function POST(
       include: includeWithPrefs,
       exclude,
       guidance: prefsPromptSnippet(prefs),
+      mealType,
     });
   } catch (e) {
     return NextResponse.json(
@@ -91,7 +95,15 @@ export async function POST(
   const withFood = rawItems
     .map((it) => ({ ...it, food: prefMap.get(it.food_id)! }))
     .filter((it) => it.food);
-  const scaled = scaleOptionToTarget(withFood, { kcal: sub.kcal, protein_g: sub.protein_g });
+  const coherent = enforceCoherence(withFood, (it) => {
+    const grams = itemGrams(it, it.food);
+    return {
+      category: classifyFood(it.food),
+      protein_g: (it.food.protein_per_100g * grams) / 100,
+      carbs_g: (it.food.carbs_per_100g * grams) / 100,
+    };
+  });
+  const scaled = scaleOptionToTarget(coherent, { kcal: sub.kcal, protein_g: sub.protein_g });
 
   const { data: meal, error: mErr } = await supabase
     .from("meals")

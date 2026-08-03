@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { mealSubTargets, scaleOptionToTarget } from "@/lib/nutrition/solver";
-import { mealMacros } from "@/lib/nutrition/macros";
+import { mealMacros, itemGrams } from "@/lib/nutrition/macros";
+import { classifyFood, mealTypeFromName, enforceCoherence } from "@/lib/nutrition/coherence";
 import { generateMenu } from "@/lib/ai/menu";
 import { loadPreferences, applyAvoidToPool, prefsPromptSnippet } from "@/lib/ai/preferences";
 import basics from "@/../data/basics.json";
@@ -46,10 +47,11 @@ export async function generateProposalForDayType(
   const filteredMap = new Map(filteredPool.map((f) => [f.id, f]));
 
   const subTargets = mealSubTargets(dayType, n);
+  const subWithType = subTargets.map((s, i) => ({ ...s, mealType: mealTypeFromName(s.name, i, subTargets.length) }));
   let raw;
   try {
     raw = await generateMenu({
-      subTargets, options: m, guidance: prefsPromptSnippet(prefs),
+      subTargets: subWithType, options: m, guidance: prefsPromptSnippet(prefs),
       pool: filteredPool.map((f) => ({
         id: f.id, name: f.name,
         kcal_per_100g: f.kcal_per_100g, protein_per_100g: f.protein_per_100g,
@@ -67,7 +69,15 @@ export async function generateProposalForDayType(
       const withFood = opt.items
         .map((it) => ({ ...it, food: filteredMap.get(it.food_id)! }))
         .filter((it) => it.food);
-      const scaled: ProposalItem[] = scaleOptionToTarget(withFood, { kcal: sub.kcal, protein_g: sub.protein_g })
+      const coherent = enforceCoherence(withFood, (it) => {
+        const grams = itemGrams(it, it.food);
+        return {
+          category: classifyFood(it.food),
+          protein_g: (it.food.protein_per_100g * grams) / 100,
+          carbs_g: (it.food.carbs_per_100g * grams) / 100,
+        };
+      });
+      const scaled: ProposalItem[] = scaleOptionToTarget(coherent, { kcal: sub.kcal, protein_g: sub.protein_g })
         .map((it) => ({ food_id: it.food.id, quantity: it.quantity, unit: it.unit, food: it.food }));
       return { label: `Opção ${oi + 1}`, items: scaled, macros: mealMacros(scaled) };
     });
