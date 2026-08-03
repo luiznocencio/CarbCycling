@@ -1,4 +1,5 @@
 import { openaiClient } from "@/lib/ai/openai";
+import { classifyFood, coherenceGuidance, coherenceRulesGeneral, type MealType } from "@/lib/nutrition/coherence";
 
 export type RawItem = { food_id: string; quantity: number; unit: "g" | "unit" };
 export type RawMenu = {
@@ -129,6 +130,7 @@ export async function suggestMealOption(input: {
   include: string[];
   exclude: string[];
   guidance?: string;
+  mealType?: MealType;
 }): Promise<RawItem[]> {
   const client = openaiClient();
   const excludeSet = new Set(input.exclude);
@@ -136,15 +138,19 @@ export async function suggestMealOption(input: {
   const BASE =
     "Você é nutricionista. Monte UMA opção de refeição brasileira que APROXIME a meta de macros " +
     "(priorize bater a proteína). Use SOMENTE food_id do pool. Inclua OBRIGATORIAMENTE os food_id de 'incluir'. " +
-    "quantity é em gramas (unit='g') ou nº de unidades (unit='unit', só se o alimento tiver unit_grams).";
+    "quantity é em gramas (unit='g') ou nº de unidades (unit='unit', só se o alimento tiver unit_grams). " +
+    coherenceRulesGeneral() +
+    (input.mealType ? " " + coherenceGuidance(input.mealType) : "") +
+    " Cada alimento traz 'categoria' — use para montar um prato coerente.";
   const system = BASE + (input.guidance ? " " + input.guidance : "");
+  const poolWithCat = usablePool.map((f) => ({ ...f, categoria: classifyFood(f) }));
   const res = await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
       { role: "system", content: system },
       {
         role: "user",
-        content: JSON.stringify({ meta: input.target, incluir: input.include, pool: usablePool }),
+        content: JSON.stringify({ meta: input.target, incluir: input.include, pool: poolWithCat }),
       },
     ],
     response_format: { type: "json_schema", json_schema: { name: "meal_option", strict: true, schema: OPTION_SCHEMA } },
@@ -158,7 +164,7 @@ export async function suggestMealOption(input: {
 }
 
 export async function generateMenu(input: {
-  subTargets: { name: string; kcal: number; protein_g: number; carbs_g: number; fat_g: number }[];
+  subTargets: { name: string; kcal: number; protein_g: number; carbs_g: number; fat_g: number; mealType?: MealType }[];
   options: number;
   pool: { id: string; name: string; kcal_per_100g: number; protein_per_100g: number; carbs_per_100g: number; fat_per_100g: number; unit_name: string | null; unit_grams: number | null }[];
   guidance?: string;
@@ -169,13 +175,21 @@ export async function generateMenu(input: {
     `${input.options} opções DISTINTAS. Cada opção é uma lista de itens que APROXIMA a meta de macros ` +
     "daquela refeição (priorize bater a PROTEÍNA). Use SOMENTE alimentos do pool, referenciando food_id. " +
     "quantity é em gramas quando unit='g', ou número de unidades quando unit='unit' (só use unit='unit' " +
-    "se o alimento tiver unit_grams). Varie os alimentos entre as opções.";
+    "se o alimento tiver unit_grams). Varie os alimentos entre as opções. " +
+    coherenceRulesGeneral() +
+    " Cada refeição tem 'tipo' e 'molde'; siga o molde do tipo. Cada alimento traz 'categoria' — use para montar pratos coerentes.";
   const system = BASE + (input.guidance ? " " + input.guidance : "");
+  const refeicoes = input.subTargets.map((s) => ({
+    name: s.name, kcal: s.kcal, protein_g: s.protein_g, carbs_g: s.carbs_g, fat_g: s.fat_g,
+    tipo: s.mealType ?? null,
+    molde: s.mealType ? coherenceGuidance(s.mealType) : null,
+  }));
+  const pool = input.pool.map((f) => ({ ...f, categoria: classifyFood(f) }));
   const res = await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
       { role: "system", content: system },
-      { role: "user", content: JSON.stringify({ refeicoes: input.subTargets, pool: input.pool }) },
+      { role: "user", content: JSON.stringify({ refeicoes, pool }) },
     ],
     response_format: { type: "json_schema", json_schema: { name: "menu", strict: true, schema: SCHEMA } },
   });
