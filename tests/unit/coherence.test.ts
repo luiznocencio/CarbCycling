@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { classifyFood, mealTypeFromName } from "@/lib/nutrition/coherence";
+import { classifyFood, mealTypeFromName, coherenceGuidance, coherenceRulesGeneral } from "@/lib/nutrition/coherence";
 
 const f = (name: string, p = 0, c = 0, g = 0) => ({
   name, protein_per_100g: p, carbs_per_100g: c, fat_per_100g: g,
@@ -46,5 +46,18 @@ describe("mealTypeFromName", () => {
   it("fallback por posição (nomes genéricos)", () => {
     expect(mealTypeFromName("Refeição 1", 0, 4)).toBe("cafe");
     expect(mealTypeFromName("Refeição 3", 2, 4)).toBe("principal");
+  });
+});
+
+describe("coherenceGuidance", () => {
+  it("regras gerais mencionam 1 proteína e arroz+feijão", () => {
+    const g = coherenceRulesGeneral();
+    expect(g).toMatch(/proteína animal/i);
+    expect(g).toMatch(/arroz \+ feijão/i);
+  });
+  it("molde por tipo", () => {
+    expect(coherenceGuidance("cafe")).toMatch(/café da manhã/i);
+    expect(coherenceGuidance("principal")).toMatch(/vegetal|salada/i);
+    expect(coherenceGuidance("lanche")).toMatch(/leve/i);
   });
 });

@@ -57,3 +57,23 @@ export function mealTypeFromName(name: string, index: number, _total: number): M
   // fallback por posição: primeira = café; demais = principal
   return index === 0 ? "cafe" : "principal";
 }
+
+export function coherenceRulesGeneral(): string {
+  return (
+    "Monte pratos que fazem sentido juntos e são palatáveis. No máximo UMA proteína animal " +
+    "principal por refeição (carne OU frango OU peixe) — ovo, feijão e laticínios são complementos " +
+    "e podem acompanhar. Não empilhe carboidratos base (escolha arroz OU macarrão OU batata; " +
+    "arroz + feijão é permitido). Escolha alimentos adequados ao horário da refeição."
+  );
+}
+
+export function coherenceGuidance(mealType: MealType): string {
+  switch (mealType) {
+    case "cafe":
+      return "Café da manhã: base de carboidrato (pão/aveia/tapioca) + proteína leve (ovo/iogurte/leite/queijo) + fruta opcional. Nada de arroz+feijão+bife no café.";
+    case "lanche":
+      return "Lanche: algo leve — fruta + proteína (iogurte/whey/leite) ou oleaginosas.";
+    case "principal":
+      return "Almoço/Jantar: 1 proteína animal + 1 carboidrato + feijão opcional + um vegetal/salada + gordura boa opcional (azeite).";
+  }
+}
